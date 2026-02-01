@@ -1,0 +1,38 @@
+REM NullSec Fake Windows Update
+REM Displays fake BSOD/update screen
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING Add-Type -AssemblyName System.Windows.Forms
+ENTER
+STRING $form = New-Object System.Windows.Forms.Form
+ENTER
+STRING $form.BackColor = [System.Drawing.Color]::FromArgb(0,120,215)
+ENTER
+STRING $form.FormBorderStyle = 'None'
+ENTER
+STRING $form.WindowState = 'Maximized'
+ENTER
+STRING $form.TopMost = $true
+ENTER
+STRING $label = New-Object System.Windows.Forms.Label
+ENTER
+STRING $label.Text = "Working on updates`n`n42% complete`n`nDon't turn off your PC"
+ENTER
+STRING $label.ForeColor = 'White'
+ENTER
+STRING $label.Font = New-Object System.Drawing.Font("Segoe UI",24)
+ENTER
+STRING $label.AutoSize = $true
+ENTER
+STRING $label.Location = New-Object System.Drawing.Point(400,300)
+ENTER
+STRING $form.Controls.Add($label)
+ENTER
+STRING $form.ShowDialog()
+ENTER

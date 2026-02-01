@@ -1,0 +1,20 @@
+REM NullSec Voice Message
+REM Speaks a message through speakers
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 500
+
+STRING Add-Type -AssemblyName System.Speech
+ENTER
+STRING $voice = New-Object System.Speech.Synthesis.SpeechSynthesizer
+ENTER
+STRING $voice.Rate = 0
+ENTER
+STRING $voice.Speak("You have been pwned by NullSec. Have a nice day.")
+ENTER
+STRING exit
+ENTER

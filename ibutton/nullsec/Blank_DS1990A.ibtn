@@ -1,0 +1,5 @@
+Filetype: Flipper iButton key
+Version: 1
+# NullSec Blank DS1990A
+Protocol: Dallas
+Rom Data: 01 02 03 04 05 06 07 08

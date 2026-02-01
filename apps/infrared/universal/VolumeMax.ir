@@ -1,0 +1,21 @@
+Filetype: IR signals file
+Version: 1
+# NullSec Volume Maximizer
+#
+name: Samsung_VolUp
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 07 00 00 00
+#
+name: LG_VolUp
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 02 00 00 00
+#
+name: Sony_VolUp
+type: parsed
+protocol: SIRC
+address: 01 00 00 00
+command: 12 00 00 00

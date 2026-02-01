@@ -1,0 +1,5 @@
+Filetype: Flipper RFID key
+Version: 1
+# NullSec Blank Indala
+Key type: Indala
+Data: 00 00 00 01

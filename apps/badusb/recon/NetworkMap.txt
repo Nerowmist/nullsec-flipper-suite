@@ -1,0 +1,20 @@
+REM NullSec Network Mapper
+REM Maps local network and identifies hosts
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $subnet = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"}).IPAddress.Split('.')[0..2] -join '.'
+ENTER
+STRING $results = @()
+ENTER
+STRING 1..254 | ForEach-Object { $ip = "$subnet.$_"; if (Test-Connection $ip -Count 1 -Quiet -TimeoutSeconds 1) { $results += $ip } }
+ENTER
+STRING $results | Out-File "$env:TEMP\network_map.txt"
+ENTER
+STRING exit
+ENTER

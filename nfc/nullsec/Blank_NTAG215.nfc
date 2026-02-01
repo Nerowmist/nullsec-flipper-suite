@@ -1,0 +1,14 @@
+Filetype: Flipper NFC device
+Version: 4
+# NullSec Blank NTAG215 (Amiibo compatible)
+Device type: NTAG215
+UID: 04 01 02 03 04 05 06
+ATQA: 44 00
+SAK: 00
+Data format version: 1
+# NTAG215 - 540 bytes user memory
+Page 0: 04 01 02 03
+Page 1: 04 05 06 80
+Page 2: 00 00 00 00
+Page 3: E1 10 3E 00
+Page 4: 00 00 00 00

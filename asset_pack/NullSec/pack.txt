@@ -1,0 +1,9 @@
+Filetype: Flipper Asset Pack
+Version: 1
+
+# NullSec Flipper Suite Asset Pack
+# https://github.com/bad-antics/nullsec-flipper-suite
+
+Name: NullSec
+Author: bad-antics
+Version: 1.0.0

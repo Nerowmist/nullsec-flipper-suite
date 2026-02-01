@@ -1,0 +1,14 @@
+Filetype: Flipper NFC device
+Version: 4
+# NullSec Blank Mifare Classic 1K
+Device type: Mifare Classic
+UID: 01 02 03 04
+ATQA: 04 00
+SAK: 08
+Mifare Classic type: 1K
+Data format version: 2
+# Blank card template
+Block 0: 01 02 03 04 00 08 04 00 00 00 00 00 00 00 00 00
+Block 1: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Block 2: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Block 3: FF FF FF FF FF FF FF 07 80 69 FF FF FF FF FF FF

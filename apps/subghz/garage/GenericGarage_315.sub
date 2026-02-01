@@ -1,0 +1,7 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+# NullSec Generic Garage Opener 315MHz
+Frequency: 315000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+RAW_Data: 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -334 668 -334 668 -334 668 -334 668 -334 668 -334 668 -334 668 -334 668 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334 -668 334

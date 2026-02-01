@@ -1,0 +1,17 @@
+# Build artifacts
+*.zip
+*.tar.gz
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.bak

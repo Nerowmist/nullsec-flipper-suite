@@ -1,0 +1,5 @@
+Filetype: Flipper RFID key
+Version: 1
+# NullSec Blank HID Proximity
+Key type: HIDProx
+Data: 00 00 00 00 01

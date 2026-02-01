@@ -1,0 +1,7 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+# NullSec SubGHz - Smart Outlet Remote
+Frequency: 433920000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+RAW_Data: 300 -300 300 -600 600 -300 300 -300 600 -600 300 -300 300 -300 600 -300 300 -600 600 -300 300 -300 300 -600 600 -300 300 -300 600 -600

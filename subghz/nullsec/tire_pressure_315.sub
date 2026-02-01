@@ -1,0 +1,7 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+# NullSec SubGHz - TPMS Sensor 315MHz
+Frequency: 315000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+RAW_Data: 250 -750 500 -250 250 -500 500 -500 250 -250 500 -750 250 -500 500 -250 250 -500 500 -500 250 -250 500 -750 250 -500

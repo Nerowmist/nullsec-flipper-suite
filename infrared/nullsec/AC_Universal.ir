@@ -1,0 +1,39 @@
+Filetype: IR signals file
+Version: 1
+# NullSec Universal AC Remote
+#
+name: Power
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 00 00 00 00
+#
+name: Temp_Up
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 01 00 00 00
+#
+name: Temp_Down
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 02 00 00 00
+#
+name: Fan_Speed
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 03 00 00 00
+#
+name: Mode
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 04 00 00 00
+#
+name: Swing
+type: parsed
+protocol: NEC
+address: 10 00 00 00
+command: 05 00 00 00

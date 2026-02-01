@@ -1,0 +1,64 @@
+Filetype: IR signals file
+Version: 1
+# NullSec TV Killer - Universal Power Off
+# Cycles through common TV power codes
+#
+name: Samsung_Power
+type: parsed
+protocol: Samsung32
+address: 07 00 00 00
+command: 02 00 00 00
+#
+name: LG_Power
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+name: Sony_Power
+type: parsed
+protocol: SIRC
+address: 01 00 00 00
+command: 15 00 00 00
+#
+name: Vizio_Power
+type: parsed
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+name: TCL_Power
+type: parsed
+protocol: NEC
+address: 00 00 00 00
+command: 08 00 00 00
+#
+name: Hisense_Power
+type: parsed
+protocol: NEC
+address: 00 BD 00 00
+command: 02 00 00 00
+#
+name: Philips_Power
+type: parsed
+protocol: RC5
+address: 00 00 00 00
+command: 0C 00 00 00
+#
+name: Panasonic_Power
+type: parsed
+protocol: Kaseikyo
+address: 00 02 20 00
+command: 00 00 3D 00
+#
+name: Sharp_Power
+type: parsed
+protocol: NEC
+address: AA 00 00 00
+command: 1B 00 00 00
+#
+name: Toshiba_Power
+type: parsed
+protocol: NEC
+address: 40 00 00 00
+command: 12 00 00 00

