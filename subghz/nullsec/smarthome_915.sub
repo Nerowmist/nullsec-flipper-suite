@@ -1,0 +1,10 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+# Smart Home Hub Interference
+# Frequency: 915 MHz (US ISM band)
+# Targets Z-Wave, Zigbee adjacent frequencies
+# Security testing only
+Frequency: 915000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+RAW_Data: 200 -200 200 -200 200 -200 200 -200 200 -200 200 -200 200 -200 200 -200 200 -400 200 -200 200 -400 200 -200 200 -200 200 -400 200 -400 200 -200 200 -200 200 -400 200 -200 200 -200 200 -400 200 -400 200 -200 200 -400 200 -200 200 -200 200 -400 200 -400 200 -200 200 -400 200 -200 200 -9500
