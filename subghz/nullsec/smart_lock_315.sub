@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 315000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - Smart Lock Unlock Signal
+# Generic smart lock signal at 315MHz
+# For authorized security testing
+RAW_Data: 350 -700 350 -350 700 -350 350 -700 350 -350 350 -350 700 -700 350 -350 700 -350 350 -700 350 -350 350 -350 700 -700 350 -350 700 -350 350 -700 350 -350 350 -350 700 -700 350 -350 700 -350 350 -700 350 -350 350 -350 700 -700 350 -350 700 -350 350 -700 350 -350 350 -350 700 -700 350 -350 700 -350

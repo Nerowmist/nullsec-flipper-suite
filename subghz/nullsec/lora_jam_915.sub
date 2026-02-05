@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 915000000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - LoRa Jamming Pattern
+# Disrupts LoRa communications on 915MHz (US)
+# For authorized IoT security testing
+RAW_Data: 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100 100 -100

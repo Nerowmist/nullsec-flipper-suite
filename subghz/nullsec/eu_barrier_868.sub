@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 868350000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - European Barrier/Gate Signal
+# Common 868MHz gate controller signal (EU)
+# Security research purposes
+RAW_Data: 400 -800 400 -400 800 -400 400 -800 400 -400 400 -400 800 -800 400 -400 800 -400 400 -800 400 -400 400 -400 800 -800 400 -400 800 -400 400 -800 400 -400 400 -400 800 -800 400 -400 800 -400 400 -800 400 -400 400 -400 800 -800 400 -400 800 -400 400 -800 400 -400 400 -400 800 -800 400 -400 800 -400

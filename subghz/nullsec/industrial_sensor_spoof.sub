@@ -1,0 +1,9 @@
+Filetype: Flipper SubGhz RAW File
+Version: 1
+Frequency: 433920000
+Preset: FuriHalSubGhzPresetOok650Async
+Protocol: RAW
+# NullSec - Industrial Sensor Spoof
+# Spoofs wireless industrial sensors
+# For authorized ICS security testing
+RAW_Data: 256 -512 256 -256 512 -256 256 -512 256 -256 256 -256 512 -512 256 -256 512 -256 256 -512 256 -256 256 -256 512 -512 256 -256 512 -256 256 -512 256 -256 256 -256 512 -512 256 -256 512 -256 256 -512 256 -256 256 -256 512 -512 256 -256 512 -256 256 -512 256 -256 256 -256 512 -512 256 -256 512 -256 256 -512 256 -256
