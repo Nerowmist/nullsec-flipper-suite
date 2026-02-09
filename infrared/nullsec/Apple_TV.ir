@@ -1,0 +1,83 @@
+Filetype: IR signals file
+Version: 1
+#
+# Apple TV Remote - NEC protocol
+# Compatible with Apple TV HD and Apple TV 4K (IR receiver)
+#
+name: Power
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 03 FC 00 00
+#
+name: Vol_up
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 0A F5 00 00
+#
+name: Vol_dn
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 0C F3 00 00
+#
+name: Mute
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 05 FA 00 00
+#
+name: Menu
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 02 FD 00 00
+#
+name: OK
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 07 F8 00 00
+#
+name: Up
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 0B F4 00 00
+#
+name: Down
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 0D F2 00 00
+#
+name: Left
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 08 F7 00 00
+#
+name: Right
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 06 F9 00 00
+#
+name: Play_Pause
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 07 F8 00 00
+#
+name: Back
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 02 FD 00 00
+#
+name: Home
+type: parsed_signal
+protocol: NECext
+address: 87 EE 00 00
+command: 04 FB 00 00

@@ -1,0 +1,114 @@
+Filetype: IR signals file
+Version: 1
+#
+# Universal TV-OFF - Power off ALL TVs
+# Cycles through every major manufacturer's power-off code
+# Point at target and transmit; Flipper sends each signal sequentially
+#
+name: Samsung_Off
+type: parsed_signal
+protocol: Samsung32
+address: 07 07 00 00
+command: 02 FD 00 00
+#
+name: LG_Off
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+name: Sony_Off
+type: parsed_signal
+protocol: SIRC
+address: 01 00 00 00
+command: 15 00 00 00
+#
+name: Vizio_Off
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+name: Panasonic_Off
+type: parsed_signal
+protocol: Kaseikyo
+address: 00 02 20 00
+command: 00 3D 00 00
+#
+name: Philips_Off
+type: parsed_signal
+protocol: RC6
+address: 00 00 00 00
+command: 0C 00 00 00
+#
+name: Sharp_Off
+type: parsed_signal
+protocol: NEC
+address: 45 00 00 00
+command: 08 00 00 00
+#
+name: Toshiba_Off
+type: parsed_signal
+protocol: NEC
+address: 40 00 00 00
+command: 12 00 00 00
+#
+name: Hisense_Off
+type: parsed_signal
+protocol: NEC
+address: 00 00 00 00
+command: 08 00 00 00
+#
+name: TCL_Off
+type: parsed_signal
+protocol: NEC
+address: 40 00 00 00
+command: 08 00 00 00
+#
+name: Insignia_Off
+type: parsed_signal
+protocol: NEC
+address: 20 00 00 00
+command: 08 00 00 00
+#
+name: Sanyo_Off
+type: parsed_signal
+protocol: NEC
+address: 38 00 00 00
+command: 08 00 00 00
+#
+name: Emerson_Off
+type: parsed_signal
+protocol: NEC
+address: 01 00 00 00
+command: 00 00 00 00
+#
+name: Hitachi_Off
+type: parsed_signal
+protocol: NEC
+address: 0E 00 00 00
+command: 08 00 00 00
+#
+name: Roku_TV_Off
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 18 E7 00 00
+#
+name: Fire_TV_Off
+type: parsed_signal
+protocol: NECext
+address: 70 17 00 00
+command: 0C F3 00 00
+#
+name: JVC_Off
+type: parsed_signal
+protocol: NEC
+address: 03 00 00 00
+command: 08 00 00 00
+#
+name: Magnavox_Off
+type: parsed_signal
+protocol: RC5
+address: 00 00 00 00
+command: 0C 00 00 00

@@ -1,0 +1,95 @@
+Filetype: IR signals file
+Version: 1
+#
+# Vizio TV Universal Remote - NEC protocol
+# Compatible with Vizio SmartCast and D/E/M/P/V series
+#
+name: Power
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 08 00 00 00
+#
+name: Vol_up
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 02 00 00 00
+#
+name: Vol_dn
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 03 00 00 00
+#
+name: Ch_up
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 00 00 00 00
+#
+name: Ch_dn
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 01 00 00 00
+#
+name: Mute
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 09 00 00 00
+#
+name: Input
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 2F 00 00 00
+#
+name: Menu
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 43 00 00 00
+#
+name: OK
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 41 00 00 00
+#
+name: Up
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 46 00 00 00
+#
+name: Down
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 47 00 00 00
+#
+name: Left
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 48 00 00 00
+#
+name: Right
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 49 00 00 00
+#
+name: Back
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 44 00 00 00
+#
+name: Home
+type: parsed_signal
+protocol: NEC
+address: 04 00 00 00
+command: 4A 00 00 00

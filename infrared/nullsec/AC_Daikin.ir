@@ -1,0 +1,95 @@
+Filetype: IR signals file
+Version: 1
+#
+# Daikin Air Conditioner Remote - NEC protocol
+# Compatible with Daikin FTXS / FTKM / Emura series
+#
+name: Power
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 48 B7 00 00
+#
+name: Temp_up
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 42 BD 00 00
+#
+name: Temp_dn
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 43 BC 00 00
+#
+name: Fan_speed
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 50 AF 00 00
+#
+name: Mode_cool
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 36 C9 00 00
+#
+name: Mode_heat
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 3C C3 00 00
+#
+name: Mode_dry
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 35 CA 00 00
+#
+name: Mode_fan
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 3E C1 00 00
+#
+name: Mode_auto
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 30 CF 00 00
+#
+name: Swing_vertical
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 51 AE 00 00
+#
+name: Swing_horizontal
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 52 AD 00 00
+#
+name: Timer_on
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 60 9F 00 00
+#
+name: Timer_off
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 61 9E 00 00
+#
+name: Sleep
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 55 AA 00 00
+#
+name: Quiet
+type: parsed_signal
+protocol: NECext
+address: 11 DA 00 00
+command: 56 A9 00 00

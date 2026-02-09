@@ -1,0 +1,95 @@
+Filetype: IR signals file
+Version: 1
+#
+# Roku Streaming Remote - NEC protocol
+# Compatible with Roku Express, Premiere, Streaming Stick, Ultra
+#
+name: Power
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 18 E7 00 00
+#
+name: Vol_up
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 10 EF 00 00
+#
+name: Vol_dn
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 11 EE 00 00
+#
+name: Mute
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 12 ED 00 00
+#
+name: Input
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 15 EA 00 00
+#
+name: OK
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 42 BD 00 00
+#
+name: Up
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 40 BF 00 00
+#
+name: Down
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 41 BE 00 00
+#
+name: Left
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 43 BC 00 00
+#
+name: Right
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 44 BB 00 00
+#
+name: Back
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 25 DA 00 00
+#
+name: Home
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 20 DF 00 00
+#
+name: Play_Pause
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 32 CD 00 00
+#
+name: Rewind
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 33 CC 00 00
+#
+name: Fast_Forward
+type: parsed_signal
+protocol: NECext
+address: 57 57 00 00
+command: 34 CB 00 00

